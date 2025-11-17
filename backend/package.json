@@ -13,9 +13,6 @@
     "db:reset": "npx prisma migrate reset --force",
     "db:studio": "npx prisma studio"
   },
-  "prisma": {
-    "seed": "node prisma/seed.js"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
