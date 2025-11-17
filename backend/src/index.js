@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import "dotenv/config";
+import moviesRouter from "./routes/movies.routes.js";
 
 const app = express();
 
@@ -9,6 +10,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
+
+// Routes
+app.use("/movies", moviesRouter);
 
 // Route de test
 app.get("/health", (req, res) => {
