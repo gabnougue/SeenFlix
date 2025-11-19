@@ -24,3 +24,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`SeenFlix API running on http://localhost:${PORT}`);
 });
+import authRouter from "./routes/auth.routes.js";
+
+app.use("/auth", authRouter);
