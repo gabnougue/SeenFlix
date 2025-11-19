@@ -7,7 +7,66 @@ import { movieSearchSchema } from "../validation/movie.schema.js";
 
 const router = express.Router();
 
-// GET /movies/search?q=...
+/**
+ * @openapi
+ * /movies/search:
+ *   get:
+ *     summary: Rechercher des films et séries
+ *     description: Effectue une recherche de films et séries TV via l'API TMDB. Les résultats sont mis en cache pour améliorer les performances.
+ *     tags:
+ *       - Films
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *         description: Terme de recherche (nom du film ou de la série)
+ *         example: Inception
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Numéro de page pour la pagination (défaut 1)
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Résultats de recherche
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 query:
+ *                   type: string
+ *                   description: Terme de recherche normalisé
+ *                   example: inception
+ *                 results:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Movie'
+ *       400:
+ *         description: Erreur de validation (paramètre q manquant ou invalide)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       500:
+ *         description: Erreur serveur ou problème avec l'API TMDB
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: TMDB_API_KEY is missing in server config
+ */
 router.get(
   "/search",
   validate(movieSearchSchema, "query"),

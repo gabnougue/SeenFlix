@@ -27,6 +27,8 @@
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.2.2",
     "morgan": "^1.10.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {

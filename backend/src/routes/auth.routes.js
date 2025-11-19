@@ -4,7 +4,68 @@ import { registerUser, loginUser } from "../services/auth.service.js";
 
 const router = express.Router();
 
-// REGISTER
+/**
+ * @openapi
+ * /auth/register:
+ *   post:
+ *     summary: Créer un nouveau compte utilisateur
+ *     description: Permet à un nouvel utilisateur de s'inscrire avec une adresse email et un mot de passe
+ *     tags:
+ *       - Authentification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Adresse email valide
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: Mot de passe (minimum 6 caractères)
+ *                 example: password123
+ *     responses:
+ *       201:
+ *         description: Utilisateur créé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User created
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Erreur de validation des données
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       409:
+ *         description: Email déjà utilisé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: Email already registered
+ *       500:
+ *         description: Erreur serveur interne
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post("/register", async (req, res) => {
   const parse = registerSchema.safeParse(req.body);
   if (!parse.success) {
@@ -25,7 +86,72 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// LOGIN
+/**
+ * @openapi
+ * /auth/login:
+ *   post:
+ *     summary: Se connecter à son compte
+ *     description: Permet à un utilisateur existant de se connecter avec son email et mot de passe. Retourne des tokens JWT.
+ *     tags:
+ *       - Authentification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Adresse email du compte
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 description: Mot de passe du compte
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Connexion réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 accessToken:
+ *                   type: string
+ *                   description: Token JWT d'accès (courte durée)
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 refreshToken:
+ *                   type: string
+ *                   description: Token JWT de rafraîchissement (longue durée)
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       400:
+ *         description: Erreur de validation des données
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       401:
+ *         description: Email ou mot de passe incorrect
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: Invalid email or password
+ *       500:
+ *         description: Erreur serveur interne
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post("/login", async (req, res) => {
   const parse = loginSchema.safeParse(req.body);
   if (!parse.success) {
