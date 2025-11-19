@@ -17,8 +17,9 @@ router.post("/register", async (req, res) => {
     const user = await registerUser(email, password);
     res.status(201).json({ message: "User created", user: { id: user.id, email: user.email }});
   } catch (err) {
+    console.error("REGISTER ERROR:", err); 
     if (err.message === "EMAIL_ALREADY_USED") {
-      return res.status(409).json({ error: "Email already registered" });
+      return res.status(409).json({ error: "Email already registered\n" });
     }
     res.status(500).json({ error: "Internal server error" });
   }
