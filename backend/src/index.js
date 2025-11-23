@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import moviesRouter from "./routes/movies.routes.js";
 import authRouter from "./routes/auth.routes.js";
 import meRouter from "./routes/me.routes.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
 
@@ -169,6 +170,9 @@ app.use("/me", meRouter)
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
+
+// Middleware de gestion des erreurs (doit être en dernier)
+app.use(errorHandler);
 
 // Lancement du serveur
 const PORT = process.env.PORT || 3000;
