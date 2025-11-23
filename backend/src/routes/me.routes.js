@@ -46,7 +46,7 @@ router.get("/profile", authenticateToken, (req, res) => {
  */
 router.get("/favorites", authenticateToken, async (req, res, next) => {
   try {
-    const favorites = await favoritesService.getUserFavorites(req.user.userId);
+    const favorites = await favoritesService.getUserFavorites(req.user.id);
     res.json(favorites);
   } catch (error) {
     next(error);
@@ -94,7 +94,7 @@ router.get("/favorites", authenticateToken, async (req, res, next) => {
  */
 router.post("/favorites", authenticateToken, validate(favoriteCreateSchema), async (req, res, next) => {
   try {
-    const favorite = await favoritesService.addFavorite(req.user.userId, req.body);
+    const favorite = await favoritesService.addFavorite(req.user.id, req.body);
     res.status(201).json(favorite);
   } catch (error) {
     next(error);
@@ -132,7 +132,7 @@ router.delete("/favorites/:id", authenticateToken, async (req, res, next) => {
       return res.status(400).json({ error: "ID invalide" });
     }
 
-    await favoritesService.deleteFavorite(favoriteId, req.user.userId);
+    await favoritesService.deleteFavorite(favoriteId, req.user.id);
     res.status(204).send();
   } catch (error) {
     next(error);
