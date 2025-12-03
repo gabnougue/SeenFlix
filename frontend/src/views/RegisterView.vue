@@ -66,92 +66,186 @@ const goToLogin = () => {
 
 <template>
   <div class="register-page">
-    <h1>Inscription</h1>
+    <div class="register-container">
+      <div class="register-header">
+        <h1>Inscription</h1>
+        <p class="register-subtitle">Créez votre compte SeenFlix</p>
+      </div>
 
-    <form class="register-form" @submit.prevent="handleSubmit">
-      <label>
-        Email
-        <input
-          v-model="email"
-          type="email"
-          placeholder="vous@example.com"
-          autocomplete="email"
-        />
-      </label>
+      <form class="register-form" @submit.prevent="handleSubmit">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            v-model="email"
+            type="email"
+            placeholder="votre@email.com"
+            autocomplete="email"
+            required
+          />
+        </div>
 
-      <label>
-        Mot de passe
-        <input
-          v-model="password"
-          type="password"
-          placeholder="Votre mot de passe"
-          autocomplete="new-password"
-        />
-      </label>
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input
+            id="password"
+            v-model="password"
+            type="password"
+            placeholder="••••••••"
+            autocomplete="new-password"
+            required
+            minlength="6"
+          />
+          <small class="hint">Au moins 6 caractères</small>
+        </div>
 
-      <button type="submit" :disabled="loading">
-        <span v-if="loading">Création du compte...</span>
-        <span v-else>S'inscrire</span>
-      </button>
-    </form>
+        <button type="submit" :disabled="loading" class="btn-submit">
+          <span v-if="loading">Création du compte...</span>
+          <span v-else>Créer mon compte</span>
+        </button>
 
-    <p v-if="error" class="error">{{ error }}</p>
-    <p v-if="success" class="success">
-      {{ success }}
-      <button class="link-button" @click="goToLogin">
-        Se connecter
-      </button>
-    </p>
+        <p v-if="error" class="error">{{ error }}</p>
+        <div v-if="success" class="success-container">
+          <p class="success">{{ success }}</p>
+          <button class="btn-login" @click="goToLogin">
+            Se connecter maintenant
+          </button>
+        </div>
+      </form>
+
+      <div class="register-footer">
+        <p>Déjà un compte ?</p>
+        <router-link to="/login" class="link-login">
+          Se connecter
+        </router-link>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .register-page {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  min-height: calc(100vh - var(--navbar-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+.register-container {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xxl) var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+  animation: fadeIn var(--transition-base) ease-out;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.register-header h1 {
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.register-subtitle {
+  color: var(--color-text-light);
+  font-size: var(--font-size-base);
 }
 
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: var(--spacing-lg);
 }
 
-.register-form label {
+.form-group {
   display: flex;
   flex-direction: column;
-  font-size: 0.9rem;
+  gap: var(--spacing-xs);
 }
 
-.register-form input {
-  margin-top: 0.25rem;
-  padding: 0.5rem 0.75rem;
+.form-group label {
+  font-weight: 500;
+  color: var(--color-text);
 }
 
-.register-form button {
-  margin-top: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
+.hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-lighter);
+  margin-top: calc(-1 * var(--spacing-xs));
 }
 
-.error {
-  color: #b00020;
+.btn-submit {
+  margin-top: var(--spacing-sm);
+  width: 100%;
 }
 
-.success {
-  color: #0b7a3b;
+.success-container {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-primary-lighter);
+  border-radius: var(--radius-md);
+  text-align: center;
 }
 
-.link-button {
-  margin-left: 0.5rem;
-  border: none;
-  background: none;
-  color: #0b5ed7;
-  cursor: pointer;
+.success-container .success {
+  margin: 0 0 var(--spacing-md) 0;
   padding: 0;
+  background: none;
+  border: none;
+}
+
+.btn-login {
+  background: var(--color-success);
+  color: var(--color-white);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  width: 100%;
+}
+
+.btn-login:hover {
+  background: var(--color-success-light);
+  transform: translateY(-1px);
+}
+
+.register-footer {
+  margin-top: var(--spacing-xl);
+  text-align: center;
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-primary-lighter);
+}
+
+.register-footer p {
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.link-login {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.link-login:hover {
+  color: var(--color-primary-dark);
   text-decoration: underline;
-  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .register-container {
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
 }
 </style>
