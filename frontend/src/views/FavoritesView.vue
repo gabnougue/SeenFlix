@@ -10,6 +10,21 @@ const router = useRouter()
 const favorites = ref([])
 const loading = ref(true)
 const error = ref(null)
+const itemToRemove = ref(null)
+
+// Notification système
+const notification = ref({
+  show: false,
+  message: "",
+  type: "success",
+})
+
+const showNotification = (message, type = "success") => {
+  notification.value = { show: true, message, type }
+  setTimeout(() => {
+    notification.value.show = false
+  }, 3000)
+}
 
 /**
  * Récupère les favoris depuis le backend (déjà enrichis avec TMDB)
@@ -42,15 +57,21 @@ const loadFavorites = async () => {
 }
 
 const removeFavorite = async (id) => {
-  if (!confirm("Supprimer ce favori ?")) return
+  // Marquer l'élément pour animation
+  itemToRemove.value = id
 
-  try {
-    await api.delete(`/me/favorites/${id}`)
-    favorites.value = favorites.value.filter((f) => f.id !== id)
-  } catch (err) {
-    console.error(err)
-    alert("Suppression impossible")
-  }
+  // Attendre la fin de l'animation
+  setTimeout(async () => {
+    try {
+      await api.delete(`/me/favorites/${id}`)
+      favorites.value = favorites.value.filter((f) => f.id !== id)
+      showNotification("Favori retiré avec succès", "success")
+    } catch (err) {
+      console.error(err)
+      showNotification("Erreur lors de la suppression", "error")
+      itemToRemove.value = null // Annuler l'animation en cas d'erreur
+    }
+  }, 300)
 }
 
 onMounted(loadFavorites)
@@ -58,70 +79,309 @@ onMounted(loadFavorites)
 
 <template>
   <div class="favorites-page">
-    <h1>Mes Favoris</h1>
+    <!-- Notification système -->
+    <Transition name="slide-fade">
+      <div v-if="notification.show" class="notification" :class="`notification-${notification.type}`">
+        {{ notification.message }}
+      </div>
+    </Transition>
 
-    <p v-if="loading">Chargement…</p>
-    <p v-if="error" class="error">{{ error }}</p>
+    <div class="favorites-container">
+      <h1>Mes Favoris</h1>
+      <p class="favorites-subtitle">Retrouvez tous vos films et séries préférés</p>
 
-    <div v-if="!loading && favorites.length === 0">
-      <p>Aucun favori pour le moment.</p>
-    </div>
+      <div v-if="loading" class="loading-state">
+        <p>Chargement de vos favoris...</p>
+      </div>
 
-    <div v-if="favorites.length" class="favorites-grid">
-      <article v-for="item in favorites" :key="item.id" class="favorite-card">
-        <img
-          v-if="item.posterPath"
-          :src="`https://image.tmdb.org/t/p/w200${item.posterPath}`"
-        />
-        <div class="favorite-body">
-          <h2>{{ item.title }}</h2>
-          <p class="meta">
-            {{ item.type === "tv" ? "Série" : "Film" }}
-          </p>
-          <p class="overview">{{ item.overview }}</p>
+      <p v-if="error" class="error">{{ error }}</p>
 
-          <button class="remove-btn" @click="removeFavorite(item.id)">
-            Retirer ❌
-          </button>
-        </div>
-      </article>
+      <div v-if="!loading && favorites.length === 0" class="empty-state">
+        <div class="empty-icon">⭐</div>
+        <p class="empty-message">Aucun favori pour le moment</p>
+        <p class="empty-hint">Ajoutez des films depuis la recherche pour les retrouver ici</p>
+        <router-link to="/search" class="btn-primary">
+          Découvrir des films
+        </router-link>
+      </div>
+
+      <TransitionGroup name="list" tag="div" v-if="favorites.length" class="favorites-grid">
+        <article
+          v-for="item in favorites"
+          :key="item.id"
+          class="favorite-card"
+          :class="{ 'removing': itemToRemove === item.id }"
+        >
+          <div class="favorite-poster">
+            <img
+              v-if="item.posterPath"
+              :src="`https://image.tmdb.org/t/p/w300${item.posterPath}`"
+              :alt="item.title"
+              loading="lazy"
+            />
+            <div v-else class="poster-placeholder">
+              <span>Pas d'image</span>
+            </div>
+          </div>
+
+          <div class="favorite-content">
+            <h2 class="favorite-title">{{ item.title }}</h2>
+
+            <div class="favorite-meta">
+              <span class="favorite-type">
+                {{ item.type === "tv" ? "Série" : "Film" }}
+              </span>
+            </div>
+
+            <p class="favorite-overview">
+              {{ item.overview || "Pas de résumé disponible." }}
+            </p>
+
+            <button class="btn-remove" @click="removeFavorite(item.id)">
+              Retirer des favoris
+            </button>
+          </div>
+        </article>
+      </TransitionGroup>
     </div>
   </div>
 </template>
 
 <style scoped>
 .favorites-page {
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  min-height: calc(100vh - var(--navbar-height));
+  padding: var(--spacing-xl) var(--spacing-lg);
+  position: relative;
 }
 
+/* Notification système */
+.notification {
+  position: fixed;
+  top: calc(var(--navbar-height) + var(--spacing-md));
+  right: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  font-weight: 500;
+  max-width: 400px;
+}
+
+.notification-success {
+  background: var(--color-success);
+  color: var(--color-white);
+}
+
+.notification-error {
+  background: var(--color-error);
+  color: var(--color-white);
+}
+
+/* Transitions pour la notification */
+.slide-fade-enter-active {
+  animation: slideIn var(--transition-base) ease-out;
+}
+
+.slide-fade-leave-active {
+  animation: slideIn var(--transition-base) ease-out reverse;
+}
+
+/* Container principal */
+.favorites-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+.favorites-container h1 {
+  text-align: left;
+  color: var(--color-primary);
+}
+
+.favorites-subtitle {
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-xl);
+  font-size: var(--font-size-base);
+}
+
+/* États de chargement et vide */
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xxl);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.5;
+}
+
+.empty-message {
+  font-size: var(--font-size-xl);
+  color: var(--color-text);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-hint {
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Grille de favoris */
 .favorites-grid {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
 }
 
+/* Card de favori */
 .favorite-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
   display: flex;
-  gap: 1rem;
-  background: #fff;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  flex-direction: column;
+  height: 100%;
 }
 
-.favorite-card img {
-  width: 120px;
-  border-radius: 8px;
+.favorite-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-4px);
 }
 
-.remove-btn {
-  margin-top: 1rem;
-  background: #e63946;
-  padding: 0.4rem 0.8rem;
-  color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
+.favorite-card.removing {
+  animation: fadeOut var(--transition-base) ease-out forwards;
+}
+
+.favorite-poster {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  background: var(--color-primary-lighter);
+}
+
+.favorite-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-base);
+}
+
+.favorite-card:hover .favorite-poster img {
+  transform: scale(1.05);
+}
+
+.poster-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary-lighter) 0%, var(--color-primary-light) 100%);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.favorite-content {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.favorite-title {
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.3;
+}
+
+.favorite-meta {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.favorite-type {
+  background: var(--color-primary-lighter);
+  color: var(--color-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.favorite-overview {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-md);
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Bouton retirer */
+.btn-remove {
+  width: 100%;
+  background: transparent;
+  color: var(--color-error);
+  border: 2px solid var(--color-error-light);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  transition: all var(--transition-base);
+}
+
+.btn-remove:hover {
+  background: var(--color-error);
+  color: var(--color-white);
+  border-color: var(--color-error);
+  transform: translateY(-1px);
+}
+
+/* Animations de liste */
+.list-enter-active,
+.list-leave-active {
+  transition: all var(--transition-base);
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.list-move {
+  transition: transform var(--transition-base);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .favorites-page {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .notification {
+    right: var(--spacing-md);
+    left: var(--spacing-md);
+    max-width: none;
+  }
+
+  .favorites-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
 }
 </style>
