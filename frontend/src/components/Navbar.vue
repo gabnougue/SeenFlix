@@ -1,10 +1,12 @@
 <template>
   <nav class="navbar">
     <router-link to="/">Accueil</router-link>
+    <router-link to="/search">Recherche</router-link>
     <router-link to="/login">Connexion</router-link>
     <router-link to="/register">Inscription</router-link>
   </nav>
 </template>
+
 
 <style scoped>
 .navbar {
