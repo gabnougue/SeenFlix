@@ -10,23 +10,8 @@ const results = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-// Notification système élégante
-const notification = ref({
-  show: false,
-  message: "",
-  type: "success", // success, error, warning
-})
-
 // tmdbId des films déjà en favoris
 const favoritesTmdbIds = ref(new Set())
-
-// Afficher une notification
-const showNotification = (message, type = "success") => {
-  notification.value = { show: true, message, type }
-  setTimeout(() => {
-    notification.value.show = false
-  }, 3000)
-}
 
 // Charger les favoris depuis le backend
 const loadFavorites = async () => {
@@ -76,7 +61,7 @@ const handleSearch = async () => {
 // Ajouter un film aux favoris
 const addToFavorites = async (movie) => {
   if (!userStore.isAuthenticated) {
-    showNotification("Vous devez être connecté pour ajouter un favori", "warning")
+    alert("Vous devez être connecté pour ajouter un favori.")
     return
   }
 
@@ -94,19 +79,19 @@ const addToFavorites = async (movie) => {
     // On marque ce film comme favori côté frontend
     favoritesTmdbIds.value.add(movie.tmdbId)
 
-    showNotification(`"${movie.title}" ajouté à vos favoris`, "success")
+    alert(`✔ "${movie.title}" ajouté à vos favoris.`)
   } catch (err) {
     console.error(err)
 
     if (err.response?.status === 409) {
       // Déjà en favoris côté backend → on le marque aussi côté frontend
       favoritesTmdbIds.value.add(movie.tmdbId)
-      showNotification("Ce film est déjà dans vos favoris", "warning")
+      alert("⚠ Ce film est déjà dans vos favoris.")
     } else if (err.response?.status === 401) {
-      showNotification("Session expirée, veuillez vous reconnecter", "error")
+      alert("Session expirée, veuillez vous reconnecter.")
       userStore.logout()
     } else {
-      showNotification("Erreur lors de l'ajout aux favoris", "error")
+      alert("Erreur lors de l'ajout aux favoris.")
     }
   }
 }
@@ -120,331 +105,151 @@ onMounted(() => {
 
 <template>
   <div class="search-page">
-    <!-- Notification système -->
-    <Transition name="slide-fade">
-      <div v-if="notification.show" class="notification" :class="`notification-${notification.type}`">
-        {{ notification.message }}
-      </div>
-    </Transition>
+    <h1>Recherche TMDB</h1>
 
-    <div class="search-container">
-      <h1>Recherche TMDB</h1>
-      <p class="search-subtitle">Découvrez des milliers de films et séries</p>
+    <form class="search-form" @submit.prevent="handleSearch">
+      <input
+        v-model="query"
+        type="text"
+        placeholder="Rechercher un film ou une série..."
+      />
+      <button type="submit" :disabled="loading">
+        <span v-if="loading">Recherche...</span>
+        <span v-else>Rechercher</span>
+      </button>
+    </form>
 
-      <form class="search-form" @submit.prevent="handleSearch">
-        <div class="search-input-group">
-          <input
-            v-model="query"
-            type="text"
-            placeholder="Rechercher un film ou une série..."
-            class="search-input"
-          />
-          <button type="submit" :disabled="loading" class="btn-search">
-            <span v-if="loading">Recherche...</span>
-            <span v-else>Rechercher</span>
+    <p v-if="error" class="error">{{ error }}</p>
+
+    <p v-if="!loading && !error && results.length === 0 && query">
+      Aucun résultat pour "{{ query }}".
+    </p>
+
+    <div v-if="results.length" class="results-grid">
+      <article v-for="item in results" :key="item.tmdbId" class="result-card">
+        <img
+          v-if="item.posterPath"
+          :src="`https://image.tmdb.org/t/p/w200${item.posterPath}`"
+          :alt="item.title"
+        />
+        <div class="result-body">
+          <h2>{{ item.title }}</h2>
+
+          <p class="meta">
+            <span>{{ item.mediaType === "tv" ? "Série" : "Film" }}</span>
+            <span v-if="item.releaseDate"> • {{ item.releaseDate }}</span>
+          </p>
+
+          <p class="overview">
+            {{ item.overview || "Pas de résumé disponible." }}
+          </p>
+
+          <button
+            class="fav-btn"
+            :class="{ added: favoritesTmdbIds.has(item.tmdbId) }"
+            :disabled="favoritesTmdbIds.has(item.tmdbId)"
+            @click="addToFavorites(item)">
+            <span v-if="favoritesTmdbIds.has(item.tmdbId)">✔ Ajouté</span>
+            <span v-else>Ajouter aux favoris</span>
           </button>
+
+
         </div>
-      </form>
-
-      <p v-if="error" class="error">{{ error }}</p>
-
-      <div v-if="!loading && !error && results.length === 0 && query" class="no-results">
-        <p>Aucun résultat pour "{{ query }}"</p>
-      </div>
-
-      <div v-if="results.length" class="results-grid">
-        <article
-          v-for="item in results"
-          :key="item.tmdbId"
-          class="movie-card"
-        >
-          <div class="movie-poster">
-            <img
-              v-if="item.posterPath"
-              :src="`https://image.tmdb.org/t/p/w300${item.posterPath}`"
-              :alt="item.title"
-              loading="lazy"
-            />
-            <div v-else class="poster-placeholder">
-              <span>Pas d'image</span>
-            </div>
-          </div>
-
-          <div class="movie-content">
-            <h2 class="movie-title">{{ item.title }}</h2>
-
-            <div class="movie-meta">
-              <span class="movie-type">
-                {{ item.mediaType === "tv" ? "Série" : "Film" }}
-              </span>
-              <span v-if="item.releaseDate" class="movie-year">
-                {{ item.releaseDate }}
-              </span>
-            </div>
-
-            <p class="movie-overview">
-              {{ item.overview || "Pas de résumé disponible." }}
-            </p>
-
-            <button
-              class="btn-favorite"
-              :class="{ 'btn-favorite-added': favoritesTmdbIds.has(item.tmdbId) }"
-              :disabled="favoritesTmdbIds.has(item.tmdbId)"
-              @click="addToFavorites(item)"
-            >
-              <span v-if="favoritesTmdbIds.has(item.tmdbId)">
-                ✓ Ajouté aux favoris
-              </span>
-              <span v-else>+ Ajouter aux favoris</span>
-            </button>
-          </div>
-        </article>
-      </div>
+      </article>
     </div>
   </div>
 </template>
 
 <style scoped>
 .search-page {
-  min-height: calc(100vh - var(--navbar-height));
-  padding: var(--spacing-xl) var(--spacing-lg);
-  position: relative;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem;
 }
 
-/* Notification système */
-.notification {
-  position: fixed;
-  top: calc(var(--navbar-height) + var(--spacing-md));
-  right: var(--spacing-lg);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  z-index: 1000;
-  font-weight: 500;
-  max-width: 400px;
-}
-
-.notification-success {
-  background: var(--color-success);
-  color: var(--color-white);
-}
-
-.notification-error {
-  background: var(--color-error);
-  color: var(--color-white);
-}
-
-.notification-warning {
-  background: #ff9800;
-  color: var(--color-white);
-}
-
-/* Transitions pour la notification */
-.slide-fade-enter-active {
-  animation: slideIn var(--transition-base) ease-out;
-}
-
-.slide-fade-leave-active {
-  animation: slideIn var(--transition-base) ease-out reverse;
-}
-
-/* Container principal */
-.search-container {
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-}
-
-.search-container h1 {
-  text-align: left;
-  color: var(--color-primary);
-}
-
-.search-subtitle {
-  color: var(--color-text-light);
-  margin-bottom: var(--spacing-xl);
-  font-size: var(--font-size-base);
-}
-
-/* Formulaire de recherche */
 .search-form {
-  margin-bottom: var(--spacing-xl);
-}
-
-.search-input-group {
   display: flex;
-  gap: var(--spacing-sm);
-  max-width: 700px;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.search-input {
+.search-form input {
   flex: 1;
-  font-size: var(--font-size-lg);
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 0.5rem 0.75rem;
 }
 
-.btn-search {
-  background: var(--color-primary);
-  color: var(--color-white);
-  padding: var(--spacing-md) var(--spacing-xl);
-  white-space: nowrap;
+.search-form button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
 }
 
-.btn-search:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+.error {
+  color: red;
+  margin-bottom: 1rem;
 }
 
-/* Messages */
-.no-results {
-  text-align: center;
-  padding: var(--spacing-xxl);
-  color: var(--color-text-light);
-}
-
-/* Grille de résultats */
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-xl);
+  gap: 1rem;
 }
 
-/* Card de film */
-.movie-card {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
+.result-card {
   display: flex;
-  flex-direction: column;
-  height: 100%;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.movie-card:hover {
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-4px);
-}
-
-.movie-poster {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 2/3;
-  overflow: hidden;
-  background: var(--color-primary-lighter);
-}
-
-.movie-poster img {
-  width: 100%;
-  height: 100%;
+.result-card img {
+  width: 120px;
+  border-radius: 0.5rem;
   object-fit: cover;
-  transition: transform var(--transition-base);
 }
 
-.movie-card:hover .movie-poster img {
-  transform: scale(1.05);
-}
-
-.poster-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--color-primary-lighter) 0%, var(--color-primary-light) 100%);
-  color: var(--color-primary);
-  font-weight: 500;
-}
-
-.movie-content {
-  padding: var(--spacing-lg);
-  display: flex;
-  flex-direction: column;
+.result-body {
   flex: 1;
 }
 
-.movie-title {
-  font-size: var(--font-size-lg);
-  color: var(--color-text);
-  margin-bottom: var(--spacing-sm);
-  line-height: 1.3;
+.meta {
+  font-size: 0.9rem;
+  color: #555;
 }
 
-.movie-meta {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-light);
+.overview {
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0.75rem;
 }
 
-.movie-type {
-  background: var(--color-primary-lighter);
-  color: var(--color-primary);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  font-weight: 500;
+.fav-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 
-.movie-year {
-  padding: var(--spacing-xs) 0;
+.fav-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background: #ddd;
+  transition: 0.2s;
 }
 
-.movie-overview {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-light);
-  line-height: 1.5;
-  margin-bottom: var(--spacing-md);
-  flex: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.fav-btn:hover {
+  background: #ccc;
 }
 
-/* Bouton favoris */
-.btn-favorite {
-  width: 100%;
-  background: var(--color-primary);
-  color: var(--color-white);
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  transition: all var(--transition-base);
+.fav-btn.added {
+  background: #4caf50 !important; /* vert */
+  color: white;
+  cursor: default;
 }
 
-.btn-favorite:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-  transform: translateY(-1px);
-}
-
-.btn-favorite-added {
-  background: var(--color-success) !important;
-  cursor: default !important;
-}
-
-.btn-favorite-added:hover {
-  transform: none !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .search-page {
-    padding: var(--spacing-lg) var(--spacing-md);
-  }
-
-  .notification {
-    right: var(--spacing-md);
-    left: var(--spacing-md);
-    max-width: none;
-  }
-
-  .search-input-group {
-    flex-direction: column;
-  }
-
-  .results-grid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-  }
+.fav-btn:disabled {
+  opacity: 0.8;
+  cursor: default;
 }
 </style>

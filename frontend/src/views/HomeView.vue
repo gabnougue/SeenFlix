@@ -1,161 +1,51 @@
 <template>
   <div class="home">
-    <div class="home-hero">
-      <img src="/logo.png" alt="SeenFlix" class="home-logo" />
-      <h1 class="home-title">SeenFlix</h1>
-      <p class="home-tagline">
-        Recherchez vos films et séries préférés,<br />
-        et gardez vos favoris au même endroit.
-      </p>
+    <h1>🎬 SeenFlix</h1>
+    <p class="tagline">
+      Recherchez vos films et séries, et gardez vos favoris au même endroit.
+    </p>
 
-      <div class="home-actions">
-        <router-link class="btn-primary btn-hero" to="/search">
-          Rechercher des films
-        </router-link>
-      </div>
-    </div>
-
-    <div class="home-features">
-      <div class="feature-card">
-        <div class="feature-icon">🔍</div>
-        <h3>Recherche TMDB</h3>
-        <p>Accédez à la plus grande base de données de films et séries</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">⭐</div>
-        <h3>Mes Favoris</h3>
-        <p>Sauvegardez vos films préférés et retrouvez-les facilement</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📱</div>
-        <h3>Simple & Élégant</h3>
-        <p>Une interface moderne et intuitive pour une expérience fluide</p>
-      </div>
+    <div class="actions">
+      <router-link class="btn primary" to="/search">🔍 Recherche TMDB</router-link>
+      <router-link class="btn" to="/login">Connexion</router-link>
+      <router-link class="btn" to="/register">Créer un compte</router-link>
     </div>
   </div>
 </template>
 
 <style scoped>
 .home {
-  min-height: calc(100vh - var(--navbar-height));
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.tagline {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.actions {
+  margin-top: 2rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 1rem;
+  max-width: 250px;
+  margin-inline: auto;
 }
 
-/* Hero section */
-.home-hero {
-  text-align: center;
-  padding: var(--spacing-xxl) var(--spacing-lg);
-  max-width: 700px;
-  animation: fadeIn var(--transition-slow) ease-out;
-}
-
-.home-logo {
-  width: 120px;
-  height: auto;
-  margin-bottom: var(--spacing-lg);
-  animation: fadeIn 0.6s ease-out;
-  filter: drop-shadow(0 4px 12px rgba(136, 77, 167, 0.2));
-}
-
-.home-title {
-  font-size: clamp(2.5rem, 5vw, 3.5rem);
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: var(--spacing-md);
-  letter-spacing: -1px;
-}
-
-.home-tagline {
-  font-size: var(--font-size-lg);
-  color: var(--color-text-light);
-  line-height: 1.6;
-  margin-bottom: var(--spacing-xl);
-}
-
-.home-actions {
-  display: flex;
-  gap: var(--spacing-md);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.btn-hero {
-  padding: var(--spacing-md) var(--spacing-xl);
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  box-shadow: var(--shadow-lg);
+.btn {
+  display: inline-block;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
   text-decoration: none;
-}
-
-.btn-hero:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(136, 77, 167, 0.3);
-}
-
-/* Features section */
-.home-features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-lg);
-  padding: var(--spacing-xl) var(--spacing-lg);
-  max-width: var(--container-max-width);
-  width: 100%;
-  margin-top: var(--spacing-xl);
-}
-
-.feature-card {
-  background: var(--bg-card);
-  padding: var(--spacing-xl);
-  border-radius: var(--radius-lg);
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
-  border: 2px solid transparent;
-}
-
-.feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
-  border-color: var(--color-primary-light);
-}
-
-.feature-icon {
-  font-size: 3rem;
-  margin-bottom: var(--spacing-md);
-  filter: grayscale(0.2);
-}
-
-.feature-card h3 {
-  color: var(--color-primary);
-  font-size: var(--font-size-xl);
-  margin-bottom: var(--spacing-sm);
+  background: #eee;
+  color: #222;
   font-weight: 600;
 }
 
-.feature-card p {
-  color: var(--color-text-light);
-  font-size: var(--font-size-base);
-  line-height: 1.6;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .home-hero {
-    padding: var(--spacing-xl) var(--spacing-md);
-  }
-
-  .home-logo {
-    width: 100px;
-  }
-
-  .home-features {
-    grid-template-columns: 1fr;
-    padding: var(--spacing-lg) var(--spacing-md);
-  }
+.btn.primary {
+  background: #c62828;
+  color: white;
 }
 </style>
