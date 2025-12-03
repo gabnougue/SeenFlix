@@ -2,7 +2,7 @@ import express from "express";
 import { authenticateToken } from "../middlewares/authenticateToken.js";
 import { favoritesService } from "../services/favorites.service.js";
 import { validate } from "../validation/validate.middleware.js";
-import { favoriteCreateSchema } from "../validation/favorite.schema.js";
+import { favoriteCreateSchema, favoriteUpdateSchema } from "../validation/favorite.schema.js";
 
 const router = express.Router();
 
@@ -104,6 +104,65 @@ router.post("/favorites", authenticateToken, validate(favoriteCreateSchema), asy
 /**
  * @openapi
  * /me/favorites/{id}:
+ *   patch:
+ *     summary: Met à jour un favori (note et/ou commentaire)
+ *     tags:
+ *       - Favoris
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 minimum: 0
+ *                 maximum: 5
+ *               comment:
+ *                 type: string
+ *                 maxLength: 500
+ *     responses:
+ *       200:
+ *         description: Favori mis à jour
+ *       400:
+ *         description: Validation échouée
+ *       404:
+ *         description: Favori non trouvé
+ *       403:
+ *         description: Accès interdit
+ */
+router.patch("/favorites/:id", authenticateToken, validate(favoriteUpdateSchema), async (req, res, next) => {
+  try {
+    const favoriteId = parseInt(req.params.id, 10);
+
+    if (isNaN(favoriteId)) {
+      return res.status(400).json({ error: "ID invalide" });
+    }
+
+    const updatedFavorite = await favoritesService.updateFavorite(
+      favoriteId,
+      req.user.id,
+      req.body
+    );
+
+    res.json(updatedFavorite);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @openapi
+ * /me/favorites/{id}:
  *   delete:
  *     summary: Supprime un favori
  *     tags:
@@ -127,7 +186,7 @@ router.post("/favorites", authenticateToken, validate(favoriteCreateSchema), asy
 router.delete("/favorites/:id", authenticateToken, async (req, res, next) => {
   try {
     const favoriteId = parseInt(req.params.id, 10);
-    
+
     if (isNaN(favoriteId)) {
       return res.status(400).json({ error: "ID invalide" });
     }
