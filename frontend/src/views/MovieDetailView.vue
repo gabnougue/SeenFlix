@@ -11,6 +11,7 @@ const userStore = useUserStore()
 const movie = ref(null)
 const loading = ref(true)
 const error = ref(null)
+const userFavorite = ref(null)
 
 // Récupération des infos via notre backend
 const fetchMovie = async () => {
@@ -20,6 +21,11 @@ const fetchMovie = async () => {
     const { type, id } = route.params
     const res = await api.get(`/movies/${type}/${id}`)
     movie.value = res.data
+    
+    // Vérifier si l'utilisateur a ce film dans ses favoris
+    if (userStore.isAuthenticated) {
+      await checkUserFavorite()
+    }
   } catch (err) {
     console.error(err)
     error.value = "Impossible de charger les détails du film."
@@ -28,18 +34,45 @@ const fetchMovie = async () => {
   }
 }
 
+// Vérifier si le film est dans les favoris de l'utilisateur
+const checkUserFavorite = async () => {
+  try {
+    const { type, id } = route.params
+    const res = await api.get('/me/favorites')
+    const favorite = res.data.find(f => f.tmdbId === parseInt(id) && f.type === type)
+    userFavorite.value = favorite || null
+  } catch (err) {
+    console.error('Erreur lors de la vérification des favoris', err)
+  }
+}
+
 // Fonction pour ajouter aux favoris (raccourci depuis la page détail)
 const addToFavorites = async () => {
   if (!userStore.isAuthenticated) return alert("Connectez-vous pour ajouter aux favoris")
   try {
     const { type, id } = route.params
-    await api.post("/me/favorites", { tmdbId: parseInt(id), type })
-    alert("Ajouté aux favoris ! Vous pouvez maintenant le noter dans 'Mes Favoris'.")
-    // Optionnel : recharger pour voir son propre avis s'il existait déjà
-    fetchMovie()
+    const res = await api.post("/me/favorites", { tmdbId: parseInt(id), type })
+    // Mettre à jour l'état local au lieu de recharger
+    userFavorite.value = res.data
   } catch (err) {
-    if (err.response?.status === 409) alert("Déjà dans vos favoris")
-    else alert("Erreur lors de l'ajout")
+    if (err.response?.status === 409) {
+      // Déjà dans les favoris, vérifier l'état
+      await checkUserFavorite()
+    } else {
+      alert("Erreur lors de l'ajout")
+    }
+  }
+}
+
+// Fonction pour retirer des favoris
+const removeFromFavorites = async () => {
+  if (!userFavorite.value) return
+  try {
+    await api.delete(`/me/favorites/${userFavorite.value.id}`)
+    // Mettre à jour l'état local directement
+    userFavorite.value = null
+  } catch (err) {
+    alert("Erreur lors de la suppression")
   }
 }
 
@@ -83,9 +116,24 @@ onMounted(fetchMovie)
               </div>
 
               <div class="actions">
-                <button class="btn-primary" @click="addToFavorites">
-                  + Ajouter à mes favoris / Noter
-                </button>
+                <Transition name="fade" mode="out-in">
+                  <button 
+                    v-if="!userFavorite" 
+                    key="add"
+                    class="btn-primary" 
+                    @click="addToFavorites"
+                  >
+                    + Ajouter à mes favoris / Noter
+                  </button>
+                  <button 
+                    v-else 
+                    key="remove"
+                    class="btn-secondary" 
+                    @click="removeFromFavorites"
+                  >
+                    ✓ Dans mes favoris - Retirer
+                  </button>
+                </Transition>
               </div>
             </div>
           </div>
@@ -284,6 +332,22 @@ onMounted(fetchMovie)
   margin-top: var(--spacing-sm);
   font-style: italic;
   color: var(--color-text-light);
+}
+
+/* TRANSITIONS */
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 
 @media (max-width: 768px) {
