@@ -17,19 +17,14 @@
 
     <div class="home-features">
       <div class="feature-card">
-        <div class="feature-icon">🔍</div>
+        <img src="/search.png" alt="Recherche" class="feature-icon-img" />
         <h3>Recherche TMDB</h3>
         <p>Accédez à la plus grande base de données de films et séries</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">⭐</div>
+        <img src="/fav.png" alt="Favoris" class="feature-icon-img" />
         <h3>Mes Favoris</h3>
         <p>Sauvegardez vos films préférés et retrouvez-les facilement</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📱</div>
-        <h3>Simple & Élégant</h3>
-        <p>Une interface moderne et intuitive pour une expérience fluide</p>
       </div>
     </div>
   </div>
@@ -100,10 +95,10 @@
 /* Features section */
 .home-features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-lg);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-xl);
   padding: var(--spacing-xl) var(--spacing-lg);
-  max-width: var(--container-max-width);
+  max-width: 800px;
   width: 100%;
   margin-top: var(--spacing-xl);
 }
@@ -124,10 +119,11 @@
   border-color: var(--color-primary-light);
 }
 
-.feature-icon {
-  font-size: 3rem;
+.feature-icon-img {
+  width: 80px;
+  height: 80px;
   margin-bottom: var(--spacing-md);
-  filter: grayscale(0.2);
+  object-fit: contain;
 }
 
 .feature-card h3 {
