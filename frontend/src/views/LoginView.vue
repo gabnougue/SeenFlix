@@ -70,7 +70,7 @@ const onSubmit = async () => {
   if (userStore.error) {
     error.value = userStore.error 
   } else {
-    router.push('/') // dashboard à faire ou changer la page d'accès après login
+    router.push('/dashboard') // dashboard à faire ou changer la page d'accès après login
   }
 
   loading.value = false
