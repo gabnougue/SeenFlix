@@ -1,136 +1,125 @@
-// import { defineStore } from 'pinia'
+import { defineStore } from "pinia"
+import api from "../api/axios"
 
-// export const useUserStore = defineStore('user', {
-//   state: () => ({
-//     user: null,     // email + id du backend
-//     token: null     // JWT stocké ici
-//   }),
-//   actions: {
-//     setUser(user, token) {
-//       this.user = user
-//       this.token = token
-//     },
-//     logout() {
-//       this.user = null
-//       this.token = null
-//       localStorage.removeItem('jwt')
-//     }
-//   }
-// })
-import { defineStore } from "pinia";
-import api from "../api/axios";
-const LS_KEY = 'seenflix_auth' // clé dans localStorage
+const LS_KEY = "seenflix_auth" // clé dans localStorage
 
 export const useUserStore = defineStore("user", {
-    state: () => ({
-        user: null,
-        accessToken: null,
-        refreshToken: null
-    }),
+  state: () => ({
+    user: null,
+    accessToken: null,
+    refreshToken: null,
+    error: null,
+  }),
 
-    getters: {
-        isAuthenticated: (state) => !!state.user,
-        isLoggedIn: (state) => !!state.user,
-        getUserEmail: (state) => state.user?.email ?? null
+  getters: {
+    isAuthenticated: (state) => !!state.user,
+    isLoggedIn: (state) => !!state.user,
+    getUserEmail: (state) => state.user?.email ?? null,
+  },
+
+  actions: {
+    saveToStorage() {
+      const payload = {
+        accessToken: this.accessToken,
+        refreshToken: this.refreshToken,
+        user: this.user,
+      }
+      localStorage.setItem(LS_KEY, JSON.stringify(payload))
     },
-      
-    actions: {
-        saveToStorage() {
-            const payload = {
-                accessToken: this.accessToken,
-                refreshToken: this.refreshToken,
-                user: this.user
-            }
-            localStorage.setItem(LS_KEY, JSON.stringify(payload))
-        },
-        loadFromStorage() {
-            const raw = localStorage.getItem(LS_KEY)
-            if (!raw) return false
-            try {
-                const { accessToken, refreshToken, user } = JSON.parse(raw)
-                this.accessToken = accessToken
-                this.refreshToken = refreshToken
-                this.user = user
-                return true
-            } catch (e) {
-                console.warn('loadFromStorage: invalid JSON', e)
-                return false
-            }
-          },
-          clearStorage() {
-            localStorage.removeItem(LS_KEY)
-          },
 
-          async login(email, password) {
-            try {
-              this.error = null;
-              const res = await api.post("/auth/login", { email, password });
-              this.user = res.data.user; // si backend renvoie user
-              return { success: true };
-            } catch (err) {
-              if (err.response) {
-                // Erreurs provenant du serveur
-                if (err.response.status === 400) {
-                  this.error = "Email ou mot de passe manquant ou invalide.";
-                } else if (err.response.status === 401) {
-                  this.error = "Email ou mot de passe incorrect.";
-                } else {
-                  this.error = "Une erreur est survenue, réessayez plus tard.";
-                }
-              } else {
-                // Erreurs réseau
-                this.error = "Impossible de joindre le serveur.";
-              }
-            } 
-          },
+    loadFromStorage() {
+      const raw = localStorage.getItem(LS_KEY)
+      if (!raw) return false
+      try {
+        const { accessToken, refreshToken, user } = JSON.parse(raw)
+        this.accessToken = accessToken
+        this.refreshToken = refreshToken
+        this.user = user
+        return true
+      } catch (e) {
+        console.warn("loadFromStorage: invalid JSON", e)
+        return false
+      }
+    },
 
-        logout() {
-            this.user = null;
-            this.accessToken = null;
-            this.refreshToken = null;
-            this.clearStorage();
-        },
+    clearStorage() {
+      localStorage.removeItem(LS_KEY)
+    },
 
-        async tryRefresh() {
-            if (!this.refreshToken) return false;
-            try {
-                const response = await api.post('/auth/refresh', {
-                    refreshToken: this.refreshToken
-                });
-                this.accessToken = response.data.accessToken;
-                this.refreshToken = response.data.refreshToken || this.refreshToken;
+    async login(email, password) {
+      try {
+        this.error = null
+        const res = await api.post("/auth/login", { email, password })
+        // ⚠️ adapter à la réponse réelle du backend
+        const { accessToken, refreshToken, user } = res.data
 
-                this.saveToStorage();
-                return true;
-            } catch (err) {
-                this.logout();
-                return false;
-            }
-        },        
+        this.accessToken = accessToken
+        this.refreshToken = refreshToken ?? null
+        this.user = user
 
-        async restoreSession() {
-            const token = this.loadFromStorage();
-            if (!token) {
-                this.user = null;
-                return;
-            }
+        this.saveToStorage()
+        return { success: true }
+      } catch (err) {
+        if (err.response) {
+          if (err.response.status === 400) {
+            this.error = "Email ou mot de passe manquant ou invalide."
+          } else if (err.response.status === 401) {
+            this.error = "Email ou mot de passe incorrect."
+          } else {
+            this.error = "Une erreur est survenue, réessayez plus tard."
+          }
+        } else {
+          this.error = "Impossible de joindre le serveur."
+        }
+        return { success: false }
+      }
+    },
 
-            if (!this.accessToken) return;
+    logout() {
+      this.user = null
+      this.accessToken = null
+      this.refreshToken = null
+      this.clearStorage()
+    },
 
-            try {
-                const response = await api.get('/auth/me', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                this.user = response.data.user;
-                this.saveToStorage();
-            } catch (err) {
-                if (err?.response?.status === 401) {
-                    const refreshed = await this.tryRefresh();
-                    if (!refreshed) this.logout();
-                } else {
-                    console.warn('restoreSession: could not call /me', err);
-                }
-            }
-        }        
-    }
+    async tryRefresh() {
+      if (!this.refreshToken) return false
+      try {
+        const response = await api.post("/auth/refresh", {
+          refreshToken: this.refreshToken,
+        })
+        this.accessToken = response.data.accessToken
+        this.refreshToken = response.data.refreshToken || this.refreshToken
+        this.saveToStorage()
+        return true
+      } catch (err) {
+        this.logout()
+        return false
+      }
+    },
+
+    async restoreSession() {
+      const ok = this.loadFromStorage()
+      if (!ok || !this.accessToken) {
+        this.user = null
+        return
+      }
+
+      try {
+        // ⚠️ adapter l’URL à ton backend réel : /me ou /auth/me
+        const response = await api.get("/me", {
+          headers: { Authorization: `Bearer ${this.accessToken}` },
+        })
+        this.user = response.data.user ?? response.data
+        this.saveToStorage()
+      } catch (err) {
+        if (err?.response?.status === 401) {
+          const refreshed = await this.tryRefresh()
+          if (!refreshed) this.logout()
+        } else {
+          console.warn("restoreSession: could not call /me", err)
+        }
+      }
+    },
+  },
 })
