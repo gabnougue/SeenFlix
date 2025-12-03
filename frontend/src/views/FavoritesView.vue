@@ -113,6 +113,7 @@ onMounted(loadFavorites)
 
 <template>
   <div class="favorites-page">
+    <!-- Notification système -->
     <Transition name="slide-fade">
       <div v-if="notification.show" class="notification" :class="`notification-${notification.type}`">
         {{ notification.message }}
@@ -145,24 +146,20 @@ onMounted(loadFavorites)
           class="favorite-card"
           :class="{ 'removing': itemToRemove === item.id }"
         >
-          <router-link :to="{ name: 'movie-detail', params: { type: item.type, id: item.tmdbId }}" class="poster-link">
-            <div class="favorite-poster">
-              <img
-                v-if="item.posterPath"
-                :src="`https://image.tmdb.org/t/p/w300${item.posterPath}`"
-                :alt="item.title"
-                loading="lazy"
-              />
-              <div v-else class="poster-placeholder">
-                <span>Pas d'image</span>
-              </div>
+          <div class="favorite-poster">
+            <img
+              v-if="item.posterPath"
+              :src="`https://image.tmdb.org/t/p/w300${item.posterPath}`"
+              :alt="item.title"
+              loading="lazy"
+            />
+            <div v-else class="poster-placeholder">
+              <span>Pas d'image</span>
             </div>
-          </router-link>
+          </div>
 
           <div class="favorite-content">
-            <router-link :to="{ name: 'movie-detail', params: { type: item.type, id: item.tmdbId }}" class="link-no-style">
-              <h2 class="favorite-title hover-link">{{ item.title }}</h2>
-            </router-link>
+            <h2 class="favorite-title">{{ item.title }}</h2>
 
             <div class="favorite-meta">
               <span class="favorite-type">
@@ -170,6 +167,7 @@ onMounted(loadFavorites)
               </span>
             </div>
 
+            <!-- Note TMDB -->
             <div v-if="item.voteAverage > 0" class="tmdb-rating">
               <span class="rating-label">Note TMDB</span>
               <StarRating :modelValue="item.voteAverage" :max="10" :showValue="true" />
@@ -191,6 +189,7 @@ onMounted(loadFavorites)
               </button>
             </div>
 
+            <!-- Éditeur de note et commentaire -->
             <FavoriteEditor
               :favoriteId="item.id"
               :initialRating="item.rating || 0"
@@ -213,24 +212,6 @@ onMounted(loadFavorites)
   min-height: calc(100vh - var(--navbar-height));
   padding: var(--spacing-xl) var(--spacing-lg);
   position: relative;
-}
-
-/* Lien pour le titre et l'image */
-.link-no-style {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
-
-.hover-link:hover {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
-
-.poster-link {
-  display: block;
-  width: 100%;
-  height: 100%; /* Important pour que le lien prenne toute la hauteur du conteneur image */
 }
 
 /* Notification système */
