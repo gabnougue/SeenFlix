@@ -20,20 +20,6 @@ const notification = ref({
 // tmdbId des films déjà en favoris
 const favoritesTmdbIds = ref(new Set())
 
-// Synopsis étendus (Set des tmdbId)
-const expandedSynopsis = ref(new Set())
-
-// Basculer l'état du synopsis
-const toggleSynopsis = (tmdbId) => {
-  if (expandedSynopsis.value.has(tmdbId)) {
-    expandedSynopsis.value.delete(tmdbId)
-  } else {
-    expandedSynopsis.value.add(tmdbId)
-  }
-  // Force la réactivité
-  expandedSynopsis.value = new Set(expandedSynopsis.value)
-}
-
 // Afficher une notification
 const showNotification = (message, type = "success") => {
   notification.value = { show: true, message, type }
@@ -196,21 +182,9 @@ onMounted(() => {
               </span>
             </div>
 
-            <div class="movie-overview-container">
-              <p
-                class="movie-overview"
-                :class="{ 'expanded': expandedSynopsis.has(item.tmdbId) }"
-              >
-                {{ item.overview || "Pas de résumé disponible." }}
-              </p>
-              <button
-                v-if="item.overview && item.overview.length > 150"
-                class="btn-read-more"
-                @click="toggleSynopsis(item.tmdbId)"
-              >
-                {{ expandedSynopsis.has(item.tmdbId) ? 'Lire moins' : 'Lire plus' }}
-              </button>
-            </div>
+            <p class="movie-overview">
+              {{ item.overview || "Pas de résumé disponible." }}
+            </p>
 
             <button
               class="btn-favorite"
@@ -415,44 +389,16 @@ onMounted(() => {
   padding: var(--spacing-xs) 0;
 }
 
-.movie-overview-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
 .movie-overview {
   font-size: var(--font-size-sm);
   color: var(--color-text-light);
   line-height: 1.5;
+  margin-bottom: var(--spacing-md);
+  flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  transition: all var(--transition-base);
-}
-
-.movie-overview.expanded {
-  display: block;
-  -webkit-line-clamp: unset;
-}
-
-.btn-read-more {
-  align-self: flex-start;
-  background: transparent;
-  color: var(--color-primary);
-  border: none;
-  padding: var(--spacing-xs) 0;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  cursor: pointer;
-  transition: color var(--transition-fast);
-  text-decoration: underline;
-}
-
-.btn-read-more:hover {
-  color: var(--color-primary-dark);
 }
 
 /* Bouton favoris */
