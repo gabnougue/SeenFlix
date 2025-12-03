@@ -148,7 +148,7 @@ button:disabled, .btn:disabled {
 }
 
 .btn-primary:hover:not(:disabled), button[type="submit"]:hover:not(:disabled) {
-  background: var(--color-primary-light);
+  background: var(--color-primary-dark);
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
