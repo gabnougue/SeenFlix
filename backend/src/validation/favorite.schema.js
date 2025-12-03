@@ -37,29 +37,3 @@ export const favoriteCreateSchema = z.object({
     .max(500, "500 caractères max")
     .optional(),
 });
-
-/**
- * favoriteUpdateSchema
- * - rating? : optional integer 0..5
- * - comment? : optional string
- */
-export const favoriteUpdateSchema = z.object({
-  rating: z
-    .number({
-      invalid_type_error: "rating doit être un nombre"
-    })
-    .int("rating doit être un entier")
-    .min(0, "rating min = 0")
-    .max(5, "rating max = 5")
-    .optional(),
-
-  comment: z
-    .string({
-      invalid_type_error: "comment doit être une chaîne"
-    })
-    .max(500, "500 caractères max")
-    .optional()
-    .nullable(),
-}).refine(data => data.rating !== undefined || data.comment !== undefined, {
-  message: "Au moins rating ou comment doit être fourni"
-});
