@@ -1,24 +1,5 @@
-// import { defineStore } from 'pinia'
-
-// export const useUserStore = defineStore('user', {
-//   state: () => ({
-//     user: null,     // email + id du backend
-//     token: null     // JWT stocké ici
-//   }),
-//   actions: {
-//     setUser(user, token) {
-//       this.user = user
-//       this.token = token
-//     },
-//     logout() {
-//       this.user = null
-//       this.token = null
-//       localStorage.removeItem('jwt')
-//     }
-//   }
-// })
 import { defineStore } from "pinia";
-import api from "../api/axios";
+import api from "../axios";
 const LS_KEY = 'seenflix_auth' // clé dans localStorage
 
 export const useUserStore = defineStore("user", {
@@ -61,28 +42,20 @@ export const useUserStore = defineStore("user", {
             localStorage.removeItem(LS_KEY)
           },
 
-          async login(email, password) {
+        async login(credentials) {
             try {
-              this.error = null;
-              const res = await api.post("/auth/login", { email, password });
-              this.user = res.data.user; // si backend renvoie user
-              return { success: true };
+                const response = await api.post('/auth/login', credentials);
+                // données renvoyées par le backend
+                this.accessToken = response.data.accessToken;
+                this.refreshToken = response.data.refreshToken || null;
+                this.user = response.data.user;
+                
+                this.saveToStorage();
             } catch (err) {
-              if (err.response) {
-                // Erreurs provenant du serveur
-                if (err.response.status === 400) {
-                  this.error = "Email ou mot de passe manquant ou invalide.";
-                } else if (err.response.status === 401) {
-                  this.error = "Email ou mot de passe incorrect.";
-                } else {
-                  this.error = "Une erreur est survenue, réessayez plus tard.";
-                }
-              } else {
-                // Erreurs réseau
-                this.error = "Impossible de joindre le serveur.";
-              }
-            } 
-          },
+                console.error(err);
+                throw err;
+            }
+        },
 
         logout() {
             this.user = null;
