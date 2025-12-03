@@ -121,5 +121,19 @@ export const useUserStore = defineStore("user", {
         }
       }
     },
+
+    async addFavorite(movie) {
+        try {
+            await api.post("/me/favorites", {
+            tmdbId: movie.tmdbId,
+            type: movie.mediaType,
+            rating: 0,
+            comment: null,
+            })
+            return { success: true }
+        } catch (err) {
+            return { success: false, error: err.response?.data || err.message }
+        }
+    }
   },
 })
