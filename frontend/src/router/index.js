@@ -6,6 +6,8 @@ import RegisterView from '../views/RegisterView.vue'
 import SearchView from "../views/SearchView.vue"
 import FavoritesView from "../views/FavoritesView.vue"
 import { useUserStore } from "../store/user"
+import MovieDetailView from '../views/MovieDetailView.vue' // Nous allons créer ce fichier
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,7 +16,8 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: RegisterView },
     { path: "/search", name: "search", component: SearchView },
-    { path: "/favorites", name: "favorites", component: FavoritesView, meta: { requiresAuth: true }}
+    { path: "/favorites", name: "favorites", component: FavoritesView, meta: { requiresAuth: true }},
+    { path: '/movie/:type/:id', name: 'movie-detail', component: MovieDetailView}
   ]
 })
 
