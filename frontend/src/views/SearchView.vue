@@ -290,7 +290,7 @@ onMounted(() => {
 }
 
 .btn-search:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  color: var(--color-primary-dark);
 }
 
 /* Messages */
