@@ -1,19 +1,36 @@
 <script setup>
-import { ref } from "vue"
-import { apiClient } from "../api/client"
+import { ref, onMounted } from "vue"
+import api from "../api/axios"
+import { useUserStore } from "../store/user"
 
-// URL du backend SeenFlix
-const API_BASE_URL = "http://localhost:3000"
+const userStore = useUserStore()
 
 const query = ref("")
 const results = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-// TODO plus tard : regarder le store user pour savoir si connecté
-// import { useUserStore } from "../store/user"
-// const userStore = useUserStore()
+// tmdbId des films déjà en favoris
+const favoritesTmdbIds = ref(new Set())
 
+// Charger les favoris depuis le backend
+const loadFavorites = async () => {
+  // Si pas connecté → pas de favoris à charger
+  if (!userStore.isAuthenticated) {
+    favoritesTmdbIds.value = new Set()
+    return
+  }
+
+  try {
+    const res = await api.get("/me/favorites")
+    const ids = res.data.map((fav) => fav.tmdbId)
+    favoritesTmdbIds.value = new Set(ids)
+  } catch (err) {
+    console.warn("Impossible de charger les favoris", err)
+  }
+}
+
+// Appelé au submit du formulaire
 const handleSearch = async () => {
   error.value = null
 
@@ -28,12 +45,10 @@ const handleSearch = async () => {
   results.value = []
 
   try {
-   const response = await apiClient.get("/movies/search", {
-    params: { q },
-})
+    const response = await api.get("/movies/search", {
+      params: { q },
+    })
 
-
-    // Le backend renvoie { query, results: [...] }
     results.value = response.data.results || []
   } catch (err) {
     console.error(err)
@@ -43,13 +58,50 @@ const handleSearch = async () => {
   }
 }
 
-// Bouton “Ajouter aux favoris” (sera vraiment branché à l’étape 7)
-const addToFavorites = (movie) => {
-  // Ici on fera plus tard un appel POST /me/favorites
-  console.log("TODO add to favorites:", movie)
-  alert(`(Étape 7) Ajout aux favoris : ${movie.title}`)
+// Ajouter un film aux favoris
+const addToFavorites = async (movie) => {
+  if (!userStore.isAuthenticated) {
+    alert("Vous devez être connecté pour ajouter un favori.")
+    return
+  }
+
+  // Si déjà dans les favoris → ne rien faire
+  if (favoritesTmdbIds.value.has(movie.tmdbId)) {
+    return
+  }
+
+  try {
+    await api.post("/me/favorites", {
+      tmdbId: movie.tmdbId,
+      type: movie.mediaType,
+    })
+
+    // On marque ce film comme favori côté frontend
+    favoritesTmdbIds.value.add(movie.tmdbId)
+
+    alert(`✔ "${movie.title}" ajouté à vos favoris.`)
+  } catch (err) {
+    console.error(err)
+
+    if (err.response?.status === 409) {
+      // Déjà en favoris côté backend → on le marque aussi côté frontend
+      favoritesTmdbIds.value.add(movie.tmdbId)
+      alert("⚠ Ce film est déjà dans vos favoris.")
+    } else if (err.response?.status === 401) {
+      alert("Session expirée, veuillez vous reconnecter.")
+      userStore.logout()
+    } else {
+      alert("Erreur lors de l'ajout aux favoris.")
+    }
+  }
 }
+
+// Charger les favoris au montage de la page
+onMounted(() => {
+  loadFavorites()
+})
 </script>
+
 
 <template>
   <div class="search-page">
@@ -82,18 +134,26 @@ const addToFavorites = (movie) => {
         />
         <div class="result-body">
           <h2>{{ item.title }}</h2>
+
           <p class="meta">
             <span>{{ item.mediaType === "tv" ? "Série" : "Film" }}</span>
             <span v-if="item.releaseDate"> • {{ item.releaseDate }}</span>
           </p>
+
           <p class="overview">
             {{ item.overview || "Pas de résumé disponible." }}
           </p>
 
-          <!-- Bouton favoris (vraie intégration en étape 7) -->
-          <button class="fav-btn" @click="addToFavorites(item)">
-            Ajouter aux favoris
+          <button
+            class="fav-btn"
+            :class="{ added: favoritesTmdbIds.has(item.tmdbId) }"
+            :disabled="favoritesTmdbIds.has(item.tmdbId)"
+            @click="addToFavorites(item)">
+            <span v-if="favoritesTmdbIds.has(item.tmdbId)">✔ Ajouté</span>
+            <span v-else>Ajouter aux favoris</span>
           </button>
+
+
         </div>
       </article>
     </div>
@@ -166,5 +226,30 @@ const addToFavorites = (movie) => {
   padding: 0.4rem 0.8rem;
   font-size: 0.9rem;
   cursor: pointer;
+}
+
+.fav-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background: #ddd;
+  transition: 0.2s;
+}
+
+.fav-btn:hover {
+  background: #ccc;
+}
+
+.fav-btn.added {
+  background: #4caf50 !important; /* vert */
+  color: white;
+  cursor: default;
+}
+
+.fav-btn:disabled {
+  opacity: 0.8;
+  cursor: default;
 }
 </style>
