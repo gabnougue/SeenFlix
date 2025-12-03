@@ -12,6 +12,20 @@ const loading = ref(true)
 const error = ref(null)
 const itemToRemove = ref(null)
 
+// Synopsis étendus (Set des id)
+const expandedSynopsis = ref(new Set())
+
+// Basculer l'état du synopsis
+const toggleSynopsis = (id) => {
+  if (expandedSynopsis.value.has(id)) {
+    expandedSynopsis.value.delete(id)
+  } else {
+    expandedSynopsis.value.add(id)
+  }
+  // Force la réactivité
+  expandedSynopsis.value = new Set(expandedSynopsis.value)
+}
+
 // Notification système
 const notification = ref({
   show: false,
@@ -133,9 +147,21 @@ onMounted(loadFavorites)
               </span>
             </div>
 
-            <p class="favorite-overview">
-              {{ item.overview || "Pas de résumé disponible." }}
-            </p>
+            <div class="favorite-overview-container">
+              <p
+                class="favorite-overview"
+                :class="{ 'expanded': expandedSynopsis.has(item.id) }"
+              >
+                {{ item.overview || "Pas de résumé disponible." }}
+              </p>
+              <button
+                v-if="item.overview && item.overview.length > 150"
+                class="btn-read-more"
+                @click="toggleSynopsis(item.id)"
+              >
+                {{ expandedSynopsis.has(item.id) ? 'Lire moins' : 'Lire plus' }}
+              </button>
+            </div>
 
             <button class="btn-remove" @click="removeFavorite(item.id)">
               Retirer des favoris
@@ -316,22 +342,51 @@ onMounted(loadFavorites)
   font-weight: 500;
 }
 
+.favorite-overview-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
 .favorite-overview {
   font-size: var(--font-size-sm);
   color: var(--color-text-light);
   line-height: 1.5;
-  margin-bottom: var(--spacing-md);
-  flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.favorite-overview.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+
+.btn-read-more {
+  align-self: flex-start;
+  background: transparent;
+  color: var(--color-primary);
+  border: none;
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  text-decoration: underline;
+}
+
+.btn-read-more:hover {
+  color: var(--color-primary-dark);
 }
 
 /* Bouton retirer */
 .btn-remove {
   width: 100%;
   background: transparent;
+  margin-top: 10px;
   color: var(--color-error);
   border: 2px solid var(--color-error-light);
   padding: var(--spacing-sm) var(--spacing-md);
