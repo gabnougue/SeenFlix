@@ -4,6 +4,8 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import SearchView from "../views/SearchView.vue"
+import FavoritesView from "../views/FavoritesView.vue"
+import { useUserStore } from "../store/user"
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,7 +14,27 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: RegisterView },
     { path: "/search", name: "search", component: SearchView },
+    { path: "/favorites", name: "favorites", component: FavoritesView, meta: { requiresAuth: true }}
   ]
+})
+
+router.beforeEach(async (to, from) => {
+  const userStore = useUserStore()
+
+  // On tente de restaurer la session si ce n’est pas déjà fait
+  if (!userStore.user && !userStore.accessToken) {
+    await userStore.restoreSession()
+  }
+
+  if (to.meta.requiresAuth && !userStore.isAuthenticated) {
+    return {
+      name: "login",
+      query: { redirect: to.fullPath }, // optionnel : pour revenir après connexion
+    }
+  }
+
+  // sinon on laisse passer
+  return true
 })
 
 export default router
