@@ -153,10 +153,8 @@ onMounted(() => {
 })
 </script>
 
-
 <template>
   <div class="search-page">
-    <!-- Notification système -->
     <Transition name="slide-fade">
       <div v-if="notification.show" class="notification" :class="`notification-${notification.type}`">
         {{ notification.message }}
@@ -188,7 +186,6 @@ onMounted(() => {
         <p>Aucun résultat pour "{{ query }}"</p>
       </div>
 
-      <!-- Films tendance (affichés uniquement si aucun résultat de recherche) -->
       <div v-if="results.length === 0 && !loading && trendingMovies.length > 0" class="trending-section">
         <h2 class="section-title">Films du moment</h2>
         <div class="results-grid">
@@ -197,20 +194,24 @@ onMounted(() => {
             :key="item.tmdbId"
             class="movie-card"
           >
-            <div class="movie-poster">
-              <img
-                v-if="item.posterPath"
-                :src="`https://image.tmdb.org/t/p/w300${item.posterPath}`"
-                :alt="item.title"
-                loading="lazy"
-              />
-              <div v-else class="poster-placeholder">
-                <span>Pas d'image</span>
+            <router-link :to="{ name: 'movie-detail', params: { type: item.mediaType || 'movie', id: item.tmdbId }}" class="poster-link">
+              <div class="movie-poster">
+                <img
+                  v-if="item.posterPath"
+                  :src="`https://image.tmdb.org/t/p/w300${item.posterPath}`"
+                  :alt="item.title"
+                  loading="lazy"
+                />
+                <div v-else class="poster-placeholder">
+                  <span>Pas d'image</span>
+                </div>
               </div>
-            </div>
+            </router-link>
 
             <div class="movie-content">
-              <h2 class="movie-title">{{ item.title }}</h2>
+              <router-link :to="{ name: 'movie-detail', params: { type: item.mediaType || 'movie', id: item.tmdbId }}" class="link-no-style">
+                <h2 class="movie-title hover-link">{{ item.title }}</h2>
+              </router-link>
 
               <div class="movie-meta">
                 <span class="movie-type">
@@ -221,7 +222,6 @@ onMounted(() => {
                 </span>
               </div>
 
-              <!-- Note TMDB -->
               <div v-if="item.voteAverage > 0" class="tmdb-rating">
                 <span class="rating-label">Note TMDB</span>
                 <StarRating :modelValue="item.voteAverage" :max="10" :showValue="true" />
@@ -259,27 +259,30 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Résultats de recherche -->
       <div v-if="results.length" class="results-grid">
         <article
           v-for="item in results"
           :key="item.tmdbId"
           class="movie-card"
         >
-          <div class="movie-poster">
-            <img
-              v-if="item.posterPath"
-              :src="`https://image.tmdb.org/t/p/w300${item.posterPath}`"
-              :alt="item.title"
-              loading="lazy"
-            />
-            <div v-else class="poster-placeholder">
-              <span>Pas d'image</span>
+          <router-link :to="{ name: 'movie-detail', params: { type: item.mediaType || 'movie', id: item.tmdbId }}" class="poster-link">
+            <div class="movie-poster">
+              <img
+                v-if="item.posterPath"
+                :src="`https://image.tmdb.org/t/p/w300${item.posterPath}`"
+                :alt="item.title"
+                loading="lazy"
+              />
+              <div v-else class="poster-placeholder">
+                <span>Pas d'image</span>
+              </div>
             </div>
-          </div>
+          </router-link>
 
           <div class="movie-content">
-            <h2 class="movie-title">{{ item.title }}</h2>
+            <router-link :to="{ name: 'movie-detail', params: { type: item.mediaType || 'movie', id: item.tmdbId }}" class="link-no-style">
+              <h2 class="movie-title hover-link">{{ item.title }}</h2>
+            </router-link>
 
             <div class="movie-meta">
               <span class="movie-type">
@@ -290,7 +293,6 @@ onMounted(() => {
               </span>
             </div>
 
-            <!-- Note TMDB -->
             <div v-if="item.voteAverage > 0" class="tmdb-rating">
               <span class="rating-label">Note TMDB</span>
               <StarRating :modelValue="item.voteAverage" :max="10" :showValue="true" />
@@ -335,6 +337,24 @@ onMounted(() => {
   min-height: calc(100vh - var(--navbar-height));
   padding: var(--spacing-xl) var(--spacing-lg);
   position: relative;
+}
+
+/* Lien pour le titre et l'image */
+.link-no-style {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.hover-link:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.poster-link {
+  display: block;
+  width: 100%;
+  height: 100%; /* Important pour que le lien prenne toute la hauteur du conteneur image */
 }
 
 /* Notification système */
