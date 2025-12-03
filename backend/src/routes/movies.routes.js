@@ -123,5 +123,76 @@ router.get(
   }
 );
 
+/**
+ * @openapi
+ * /movies/trending:
+ *   get:
+ *     summary: Récupérer les films tendance du moment
+ *     description: Récupère les films les plus populaires du jour via l'API TMDB
+ *     tags:
+ *       - Films
+ *     responses:
+ *       200:
+ *         description: Liste des films tendance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 results:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Movie'
+ *       500:
+ *         description: Erreur serveur ou problème avec l'API TMDB
+ */
+router.get("/trending", async (req, res, next) => {
+  try {
+    const cacheKey = "trending_movies_day";
+    const cached = cache.get(cacheKey);
+
+    if (cached) {
+      console.log("[TMDB TRENDING] CACHE HIT");
+      return res.json({ results: cached });
+    }
+
+    console.log("[TMDB TRENDING] CACHE MISS");
+
+    const apiKey = process.env.TMDB_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({
+        error: { message: "TMDB_API_KEY is missing in server config" },
+      });
+    }
+
+    const response = await axios.get(
+      "https://api.themoviedb.org/3/trending/movie/day",
+      {
+        params: {
+          api_key: apiKey,
+          language: "fr-FR",
+        },
+      }
+    );
+
+    const results = (response.data.results || [])
+      .slice(0, 20) // Limiter à 20 films max
+      .map((item) => ({
+        tmdbId: item.id,
+        title: item.title || "Titre inconnu",
+        overview: item.overview,
+        posterPath: item.poster_path,
+        mediaType: "movie",
+        releaseDate: item.release_date,
+      }));
+
+    // Cache pendant 1 heure (les trending changent lentement)
+    cache.set(cacheKey, results, 3600);
+
+    return res.json({ results });
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default router;

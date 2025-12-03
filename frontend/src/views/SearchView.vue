@@ -9,6 +9,11 @@ const query = ref("")
 const results = ref([])
 const loading = ref(false)
 const error = ref(null)
+const hasSearched = ref(false) // Pour savoir si une recherche a été lancée
+
+// Films tendance
+const trendingMovies = ref([])
+const loadingTrending = ref(true)
 
 // Notification système élégante
 const notification = ref({
@@ -67,11 +72,13 @@ const handleSearch = async () => {
   if (!q) {
     error.value = "Veuillez saisir un terme de recherche."
     results.value = []
+    hasSearched.value = false
     return
   }
 
   loading.value = true
   results.value = []
+  hasSearched.value = true // Marquer qu'une recherche a été lancée
 
   try {
     const response = await api.get("/movies/search", {
@@ -125,9 +132,23 @@ const addToFavorites = async (movie) => {
   }
 }
 
-// Charger les favoris au montage de la page
+// Charger les films tendance
+const loadTrendingMovies = async () => {
+  loadingTrending.value = true
+  try {
+    const response = await api.get("/movies/trending")
+    trendingMovies.value = response.data.results || []
+  } catch (err) {
+    console.error("Erreur lors du chargement des films tendance", err)
+  } finally {
+    loadingTrending.value = false
+  }
+}
+
+// Charger les favoris et les films tendance au montage de la page
 onMounted(() => {
   loadFavorites()
+  loadTrendingMovies()
 })
 </script>
 
@@ -162,10 +183,76 @@ onMounted(() => {
 
       <p v-if="error" class="error">{{ error }}</p>
 
-      <div v-if="!loading && !error && results.length === 0 && query" class="no-results">
+      <div v-if="!loading && !error && results.length === 0 && hasSearched" class="no-results">
         <p>Aucun résultat pour "{{ query }}"</p>
       </div>
 
+      <!-- Films tendance (affichés uniquement si aucun résultat de recherche) -->
+      <div v-if="results.length === 0 && !loading && trendingMovies.length > 0" class="trending-section">
+        <h2 class="section-title">Films du moment</h2>
+        <div class="results-grid">
+          <article
+            v-for="item in trendingMovies"
+            :key="item.tmdbId"
+            class="movie-card"
+          >
+            <div class="movie-poster">
+              <img
+                v-if="item.posterPath"
+                :src="`https://image.tmdb.org/t/p/w300${item.posterPath}`"
+                :alt="item.title"
+                loading="lazy"
+              />
+              <div v-else class="poster-placeholder">
+                <span>Pas d'image</span>
+              </div>
+            </div>
+
+            <div class="movie-content">
+              <h2 class="movie-title">{{ item.title }}</h2>
+
+              <div class="movie-meta">
+                <span class="movie-type">
+                  {{ item.mediaType === "tv" ? "Série" : "Film" }}
+                </span>
+                <span v-if="item.releaseDate" class="movie-year">
+                  {{ item.releaseDate }}
+                </span>
+              </div>
+
+              <div class="movie-overview-container">
+                <p
+                  class="movie-overview"
+                  :class="{ 'expanded': expandedSynopsis.has(item.tmdbId) }"
+                >
+                  {{ item.overview || "Pas de résumé disponible." }}
+                </p>
+                <button
+                  v-if="item.overview && item.overview.length > 150"
+                  class="btn-read-more"
+                  @click="toggleSynopsis(item.tmdbId)"
+                >
+                  {{ expandedSynopsis.has(item.tmdbId) ? 'Lire moins' : 'Lire plus' }}
+                </button>
+              </div>
+
+              <button
+                class="btn-favorite"
+                :class="{ 'btn-favorite-added': favoritesTmdbIds.has(item.tmdbId) }"
+                :disabled="favoritesTmdbIds.has(item.tmdbId)"
+                @click="addToFavorites(item)"
+              >
+                <span v-if="favoritesTmdbIds.has(item.tmdbId)">
+                  ✓ Ajouté aux favoris
+                </span>
+                <span v-else>+ Ajouter aux favoris</span>
+              </button>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- Résultats de recherche -->
       <div v-if="results.length" class="results-grid">
         <article
           v-for="item in results"
@@ -283,6 +370,18 @@ onMounted(() => {
 .search-container h1 {
   text-align: left;
   color: var(--color-primary);
+}
+
+/* Section trending */
+.trending-section {
+  animation: fadeIn var(--transition-base) ease-out;
+}
+
+.section-title {
+  font-size: var(--font-size-2xl);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-lg);
+  font-weight: 600;
 }
 
 .search-subtitle {
@@ -458,6 +557,7 @@ onMounted(() => {
 /* Bouton favoris */
 .btn-favorite {
   width: 100%;
+  margin-top: 10px;
   background: var(--color-primary);
   color: var(--color-white);
   padding: var(--spacing-sm) var(--spacing-md);
