@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, onMounted, computed } from "vue"
 import { useRouter } from "vue-router"
 import api from "../api/axios"
 import { useUserStore } from "../store/user"
@@ -13,6 +13,10 @@ const favorites = ref([])
 const loading = ref(true)
 const error = ref(null)
 const itemToRemove = ref(null)
+const filterType = ref("all")      // "all", "movie", "tv"
+const filterYear = ref("")          // année, ex: "2023"
+const filterRating = ref(0)         // note minimale 0-5
+
 
 // Synopsis étendus (Set des id)
 const expandedSynopsis = ref(new Set())
@@ -108,6 +112,30 @@ const updateFavorite = async ({ favoriteId, data }) => {
   }
 }
 
+// Favoris filtrés
+const filteredFavorites = computed(() => {
+  return favorites.value.filter(item => {
+    // Type
+    if (filterType.value !== "all" && item.type !== filterType.value) return false
+
+    // Année
+    const releaseYear = item.releaseDate?.slice(0, 4) || item.firstAirDate?.slice(0, 4)
+    if (filterYear.value && releaseYear !== filterYear.value.toString()) return false
+
+    // Note
+    if (item.rating < filterRating.value) return false
+
+    return true
+  })
+})
+
+// Réinitialiser les filtres
+const resetFilters = () => {
+  filterType.value = "all"
+  filterYear.value = ""
+  filterRating.value = 0
+}
+
 onMounted(loadFavorites)
 </script>
 
@@ -122,25 +150,33 @@ onMounted(loadFavorites)
     <div class="favorites-container">
       <h1>Mes Favoris</h1>
       <p class="favorites-subtitle">Retrouvez tous vos films et séries préférés</p>
-
-      <div v-if="loading" class="loading-state">
-        <p>Chargement de vos favoris...</p>
+      
+      <!-- Filtres -->
+      <div class="filters">
+        <select v-model="filterType">
+          <option value="all">Tous</option>
+          <option value="movie">Film</option>
+          <option value="tv">Série</option>
+        </select>
+        <input type="number" v-model="filterYear" placeholder="YYYY" min="1900" max="2100" />
+        <input type="number" v-model="filterRating" min="0" max="5" />
+        <button @click="resetFilters">Réinitialiser</button>
       </div>
 
-      <p v-if="error" class="error">{{ error }}</p>
-
-      <div v-if="!loading && favorites.length === 0" class="empty-state">
+      <!-- Etats -->
+      <div v-if="loading" class="loading-state">Chargement de vos favoris...</div>
+      <div v-else-if="error" class="error">{{ error }}</div>
+      <div v-else-if="filteredFavorites.length === 0" class="empty-state">
         <div class="empty-icon">⭐</div>
-        <p class="empty-message">Aucun favori pour le moment</p>
+        <p class="empty-message">Aucun favori correspondant</p>
         <p class="empty-hint">Ajoutez des films depuis la recherche pour les retrouver ici</p>
-        <router-link to="/search" class="btn-primary">
-          Découvrir des films
-        </router-link>
+        <router-link to="/search" class="btn-primary">Découvrir des films</router-link>
       </div>
 
-      <TransitionGroup name="list" tag="div" v-if="favorites.length" class="favorites-grid">
+      <!-- Liste des favoris -->
+      <TransitionGroup name="list" tag="div" v-if="filteredFavorites.length" class="favorites-grid">
         <article
-          v-for="item in favorites"
+          v-for="item in filteredFavorites"
           :key="item.id"
           class="favorite-card"
           :class="{ 'removing': itemToRemove === item.id }"
@@ -431,6 +467,27 @@ onMounted(loadFavorites)
 .favorite-overview.expanded {
   display: block;
   -webkit-line-clamp: unset;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-white);
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  text-align: center;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border-radius: var(--radius-md);
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  transform: translateY(-1px);
 }
 
 .btn-read-more {
