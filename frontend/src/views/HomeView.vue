@@ -16,20 +16,16 @@
     </div>
 
     <div class="home-features">
-      <router-link to="/search">
-        <div class="feature-card" >
-          <img src="/search.png" alt="Recherche" class="feature-icon-img" />
-          <h3>Recherche TMDB</h3>
-          <p>Accédez à la plus grande base de données de films et séries</p>
-        </div>
-      </router-link>
-      <router-link to="/favorites">
-        <div class="feature-card">
-          <img src="/fav.png" alt="Favoris" class="feature-icon-img" />
-          <h3>Mes Favoris</h3>
-          <p>Sauvegardez vos films préférés et retrouvez-les facilement</p>
-        </div>
-      </router-link>
+      <div class="feature-card">
+        <img src="/search.png" alt="Recherche" class="feature-icon-img" />
+        <h3>Recherche TMDB</h3>
+        <p>Accédez à la plus grande base de données de films et séries</p>
+      </div>
+      <div class="feature-card">
+        <img src="/fav.png" alt="Favoris" class="feature-icon-img" />
+        <h3>Mes Favoris</h3>
+        <p>Sauvegardez vos films préférés et retrouvez-les facilement</p>
+      </div>
     </div>
   </div>
 </template>
