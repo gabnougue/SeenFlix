@@ -3,8 +3,6 @@ import { ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
 import api from "../api/axios"
 import { useUserStore } from "../store/user"
-import StarRating from "../components/StarRating.vue"
-import FavoriteEditor from "../components/FavoriteEditor.vue"
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -90,24 +88,6 @@ const removeFavorite = async (id) => {
   }, 300)
 }
 
-// Mettre à jour un favori (rating/comment)
-const updateFavorite = async ({ favoriteId, data }) => {
-  try {
-    const response = await api.patch(`/me/favorites/${favoriteId}`, data)
-
-    // Mettre à jour localement
-    const index = favorites.value.findIndex(f => f.id === favoriteId)
-    if (index !== -1) {
-      favorites.value[index] = { ...favorites.value[index], ...response.data }
-    }
-
-    showNotification("Modifications enregistrées", "success")
-  } catch (err) {
-    console.error(err)
-    showNotification("Erreur lors de la sauvegarde", "error")
-  }
-}
-
 onMounted(loadFavorites)
 </script>
 
@@ -167,12 +147,6 @@ onMounted(loadFavorites)
               </span>
             </div>
 
-            <!-- Note TMDB -->
-            <div v-if="item.voteAverage > 0" class="tmdb-rating">
-              <span class="rating-label">Note TMDB</span>
-              <StarRating :modelValue="item.voteAverage" :max="10" :showValue="true" />
-            </div>
-
             <div class="favorite-overview-container">
               <p
                 class="favorite-overview"
@@ -188,14 +162,6 @@ onMounted(loadFavorites)
                 {{ expandedSynopsis.has(item.id) ? 'Lire moins' : 'Lire plus' }}
               </button>
             </div>
-
-            <!-- Éditeur de note et commentaire -->
-            <FavoriteEditor
-              :favoriteId="item.id"
-              :initialRating="item.rating || 0"
-              :initialComment="item.comment || ''"
-              @update="updateFavorite"
-            />
 
             <button class="btn-remove" @click="removeFavorite(item.id)">
               Retirer des favoris
@@ -373,21 +339,6 @@ onMounted(loadFavorites)
   color: var(--color-primary);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--radius-sm);
-  font-weight: 500;
-}
-
-/* Note TMDB */
-.tmdb-rating {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) 0;
-  margin-bottom: var(--spacing-sm);
-}
-
-.rating-label {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-light);
   font-weight: 500;
 }
 

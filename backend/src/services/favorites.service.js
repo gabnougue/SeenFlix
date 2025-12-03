@@ -40,8 +40,7 @@ export const favoritesService = {
             title: response.data.title || response.data.name,
             posterPath: response.data.poster_path,
             overview: response.data.overview,
-            releaseDate: response.data.release_date || response.data.first_air_date,
-            voteAverage: response.data.vote_average || 0
+            releaseDate: response.data.release_date || response.data.first_air_date
           };
         } catch (error) {
           console.error(`Erreur enrichissement TMDB pour favori ${fav.id}:`, error.message);
@@ -134,39 +133,5 @@ export const favoritesService = {
       );
     }
     return favorite;
-  },
-
-  /**
-   * Met à jour un favori (rating et/ou comment)
-   */
-  async updateFavorite(favoriteId, userId, { rating, comment }) {
-    // Vérifier que le favori existe et appartient à l'utilisateur
-    const favorite = await prisma.favorite.findUnique({
-      where: { id: favoriteId }
-    });
-
-    if (!favorite) {
-      throw new AppError('Favori non trouvé', 404, 'FAVORITE_NOT_FOUND');
-    }
-
-    if (favorite.userId !== userId) {
-      throw new AppError(
-        'Vous n\'avez pas le droit de modifier ce favori',
-        403,
-        'FORBIDDEN'
-      );
-    }
-
-    // Mettre à jour uniquement les champs fournis
-    const updateData = {};
-    if (rating !== undefined) updateData.rating = rating;
-    if (comment !== undefined) updateData.comment = comment;
-
-    const updatedFavorite = await prisma.favorite.update({
-      where: { id: favoriteId },
-      data: updateData
-    });
-
-    return updatedFavorite;
   }
 };
