@@ -112,6 +112,7 @@ const handleLogout = () => {
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
+  position: relative;
 }
 
 .nav-link:hover {
@@ -122,6 +123,16 @@ const handleLogout = () => {
 .nav-link.router-link-active {
   color: var(--color-primary);
   background: var(--color-primary-lighter);
+}
+
+.nav-link.router-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-primary);
 }
 
 /* Auth buttons */

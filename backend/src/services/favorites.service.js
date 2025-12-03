@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../utils/AppError.js';
-import axios from 'axios';
 
 const prisma = new PrismaClient();
 
@@ -9,54 +8,10 @@ export const favoritesService = {
    * Récupère tous les favoris d'un utilisateur
    */
   async getUserFavorites(userId) {
-    const favorites = await prisma.favorite.findMany({
+    return await prisma.favorite.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' }
     });
-
-    // Enrichir chaque favori avec les données TMDB
-    const apiKey = process.env.TMDB_API_KEY;
-
-    if (!apiKey) {
-      console.warn('TMDB_API_KEY manquante, retour des favoris sans enrichissement');
-      return favorites;
-    }
-
-    const enrichedFavorites = await Promise.all(
-      favorites.map(async (fav) => {
-        try {
-          const response = await axios.get(
-            `https://api.themoviedb.org/3/${fav.type}/${fav.tmdbId}`,
-            {
-              params: {
-                api_key: apiKey,
-                language: 'fr-FR'
-              }
-            }
-          );
-
-          return {
-            ...fav,
-            title: response.data.title || response.data.name,
-            posterPath: response.data.poster_path,
-            overview: response.data.overview,
-            releaseDate: response.data.release_date || response.data.first_air_date
-          };
-        } catch (error) {
-          console.error(`Erreur enrichissement TMDB pour favori ${fav.id}:`, error.message);
-          // Retourner le favori sans enrichissement en cas d'erreur
-          return {
-            ...fav,
-            title: 'Titre non disponible',
-            posterPath: null,
-            overview: 'Description non disponible',
-            releaseDate: null
-          };
-        }
-      })
-    );
-
-    return enrichedFavorites;
   },
 
   /**
