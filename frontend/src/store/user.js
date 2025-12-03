@@ -106,8 +106,7 @@ export const useUserStore = defineStore("user", {
       }
 
       try {
-        // ⚠️ adapter l’URL à ton backend réel : /me ou /auth/me
-        const response = await api.get("/me", {
+        const response = await api.get("/me/profile", { //arrive directement sur la page d'accueil
           headers: { Authorization: `Bearer ${this.accessToken}` },
         })
         this.user = response.data.user ?? response.data
@@ -117,7 +116,7 @@ export const useUserStore = defineStore("user", {
           const refreshed = await this.tryRefresh()
           if (!refreshed) this.logout()
         } else {
-          console.warn("restoreSession: could not call /me", err)
+          console.warn("restoreSession: could not call /me/profile", err)
         }
       }
     },
