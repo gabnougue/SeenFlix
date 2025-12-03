@@ -85,6 +85,7 @@
   font-weight: 600;
   box-shadow: var(--shadow-lg);
   text-decoration: none;
+  border-radius: var(--radius-md);
 }
 
 .btn-hero:hover {
