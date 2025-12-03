@@ -112,6 +112,7 @@ router.get(
         posterPath: item.poster_path,
         mediaType: item.media_type,
         releaseDate: item.release_date || item.first_air_date,
+        voteAverage: item.vote_average || 0,
       }));
 
       cache.set(normalizedQuery, results);
@@ -184,6 +185,7 @@ router.get("/trending", async (req, res, next) => {
         posterPath: item.poster_path,
         mediaType: "movie",
         releaseDate: item.release_date,
+        voteAverage: item.vote_average || 0,
       }));
 
     // Cache pendant 1 heure (les trending changent lentement)

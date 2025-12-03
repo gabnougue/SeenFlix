@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue"
 import api from "../api/axios"
 import { useUserStore } from "../store/user"
+import StarRating from "../components/StarRating.vue"
 
 const userStore = useUserStore()
 
@@ -220,6 +221,12 @@ onMounted(() => {
                 </span>
               </div>
 
+              <!-- Note TMDB -->
+              <div v-if="item.voteAverage > 0" class="tmdb-rating">
+                <span class="rating-label">Note TMDB</span>
+                <StarRating :modelValue="item.voteAverage" :max="10" :showValue="true" />
+              </div>
+
               <div class="movie-overview-container">
                 <p
                   class="movie-overview"
@@ -281,6 +288,12 @@ onMounted(() => {
               <span v-if="item.releaseDate" class="movie-year">
                 {{ item.releaseDate }}
               </span>
+            </div>
+
+            <!-- Note TMDB -->
+            <div v-if="item.voteAverage > 0" class="tmdb-rating">
+              <span class="rating-label">Note TMDB</span>
+              <StarRating :modelValue="item.voteAverage" :max="10" :showValue="true" />
             </div>
 
             <div class="movie-overview-container">
@@ -512,6 +525,21 @@ onMounted(() => {
 
 .movie-year {
   padding: var(--spacing-xs) 0;
+}
+
+/* Note TMDB */
+.tmdb-rating {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  margin-bottom: var(--spacing-sm);
+}
+
+.rating-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-light);
+  font-weight: 500;
 }
 
 .movie-overview-container {
