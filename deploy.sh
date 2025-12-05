@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Fonction pour vérifier et installer Docker en fonction de l'OS utilisé
+# Fonction pour vérifier et installer Docker
 check_docker() {
     if ! command -v docker &> /dev/null; then
-        echo "🐳 Docker n'est pas installé."
+        echo "Docker n'est pas installé."
         
         # Détection de l'OS
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -42,16 +42,21 @@ check_docker() {
 
 # Fonction pour nettoyer l'environnement
 clean() {
-    echo "🧹 Nettoyage de l'environnement Docker..."
+    echo "Nettoyage de l'environnement Docker..."
     docker-compose down --volumes --remove-orphans
     echo "Environnement nettoyé (conteneurs, réseaux et volumes supprimés)."
     exit 0
 }
 
-# Vérifier si l'argument "clean" est passé
-if [ "$1" = "clean" ]; then
-    clean
-fi
+# Analyse des arguments
+MODE="prod"
+for arg in "$@"; do
+    if [ "$arg" == "dev" ]; then
+        MODE="dev"
+    elif [ "$arg" == "clean" ]; then
+        clean
+    fi
+done
 
 # Vérification de Docker au démarrage
 check_docker
@@ -67,21 +72,31 @@ fi
 echo "Chargement des variables d'environnement..."
 source .env
 
-echo "Démarrage de SeenFlix avec Docker..."
+if [ "$MODE" == "dev" ]; then
+    echo "Démarrage de SeenFlix en mode DÉVELOPPEMENT (Hot Reload)..."
+    echo "Les modifications dans le code seront automatiquement prises en compte."
+    echo "Appuyez sur Ctrl+C pour arrêter."
+    echo "Frontend accessible sur : http://localhost:8081"
+    
+    # Lancement avec configuration dev autonome
+    docker-compose -f docker-compose.dev.yml up --build
+else
+    echo "Démarrage de SeenFlix en mode PRODUCTION (Docker)..."
+    
+    # Build et lancement des conteneurs
+    docker-compose up --build -d
 
-# Build et lancement des conteneurs
-docker-compose up --build -d
+    # Vérifier si la commande précédente a réussi
+    if [ $? -ne 0 ]; then
+        echo "Erreur : Le démarrage de l'application a échoué."
+        exit 1
+    fi
 
-# Vérifier si la commande précédente a réussi
-if [ $? -ne 0 ]; then
-    echo "Erreur : Le démarrage de l'application a échoué."
-    exit 1
+    echo ""
+    echo "Application démarrée !"
+    echo "Frontend accessible sur : http://localhost:8080"
+    echo "Backend accessible via le proxy interne"
+    echo ""
+    echo "Pour arrêter l'application : docker-compose down"
+    echo "Pour tout nettoyer (volumes inclus) : ./deploy.sh clean"
 fi
-
-echo ""
-echo "Application démarrée !"
-echo "Frontend accessible sur : http://localhost:8080"
-echo "Backend accessible via le proxy interne"
-echo ""
-echo "Pour arrêter l'application : docker-compose down"
-echo "Pour tout nettoyer (volumes inclus) : ./deploy.sh clean"
