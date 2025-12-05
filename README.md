@@ -22,17 +22,32 @@ Projet réalisé dans le cadre de la 2ème année filière Réseaux et Informati
 - **npm** (inclus avec Node.js)
 - Une clé API TMDB (The Movie Database)
 
-### Installation
+### Installation rapide (recommandé)
 
-1. Clonez le projet et configurez les variables d'environnement :
+Exécutez le script d'initialisation :
 
-   ```bash
-   # Copier le fichier .env.example et le remplir avec votre clé TMDB
-   cp .env.example .env
-   cp backend/.env.example backend/.env
-   ```
+```bash
+chmod +x setup.sh
+./setup.sh
+```
 
-2. Renseignez votre `TMDB_API_KEY` dans les fichiers `.env`.
+Ce script :
+
+- Génère automatiquement les secrets JWT
+- Vous demande votre clé TMDB API
+- Installe toutes les dépendances
+- Initialise la base de données
+
+### Installation manuelle
+
+Si vous préférez configurer manuellement :
+
+```bash
+# Copier les fichiers .env.example
+cp backend/.env.example backend/.env
+# Modifier backend/.env et ajouter votre clé TMDB
+# Obtenir une clé sur: https://www.themoviedb.org/settings/api
+```
 
 ### Lancement
 
@@ -42,7 +57,7 @@ Ouvrez **deux terminaux** :
 
 ```bash
 cd backend
-npm install or npm ci
+npm install
 npx prisma migrate dev   # Initialise la base de données SQLite
 npm run dev
 ```
@@ -53,7 +68,7 @@ Le serveur API tourne sur **http://localhost:3000**
 
 ```bash
 cd frontend
-npm install or npm ci
+npm install
 npm run dev
 ```
 
@@ -155,16 +170,9 @@ La base de données SQLite contient deux entités principales définies dans `sc
     - Stocke les données "sociales" : `rating` (note), `comment` (avis).
     - Contrainte d'unicité sur `[userId, tmdbId, type]` pour éviter les doublons.
 
-### Gestion du Cache et Proxy TMDB
-
-Un point technique intéressant est l'utilisation d'un cache LRU (Least Recently Used) dans le backend pour les requêtes TMDB.
-
-- **Pourquoi ?** Pour éviter de spammer l'API TMDB (limitations de rate-limit) et accélérer les réponses pour les recherches fréquentes (ex: "Inception", "Trending").
-- **Fonctionnement :** Avant d'appeler TMDB, le serveur vérifie si la requête est en cache. Si oui, il renvoie le cache. Sinon, il appelle TMDB, stocke le résultat et le renvoie.
-
 ---
 
-## Analyse des Flux (Routes Clés)
+## Les Flux (Routes Clés)
 
 Voici comment fonctionnent certaines routes clés, de la requête frontend jusqu'à la réponse.
 
