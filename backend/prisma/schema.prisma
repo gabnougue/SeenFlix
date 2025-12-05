@@ -28,7 +28,7 @@ model Favorite {
   userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tmdbId    Int
-  type      String   // "movie" or "tv"
+  type      String // "movie" or "tv"
   rating    Int?
   comment   String?
   createdAt DateTime @default(now())
