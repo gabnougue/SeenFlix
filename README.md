@@ -23,7 +23,7 @@ Le projet est entièrement conteneurisé pour faciliter son déploiement.
 
 ### Lancement
 
-1.  Assurez-vous d'avoir un fichier `.env` à la racine du projet (copié depuis `backend/.env` ou créé manuellement) contenant votre `TMDB_API_KEY`.
+1.  Assurez-vous d'avoir un fichier `.env` à la racine du projet (copié depuis `.env.example` et rempli) contenant votre `TMDB_API_KEY`.
 
 2.  Lancez le script de déploiement (il vérifiera si Docker est installé) :
 
@@ -34,8 +34,6 @@ Le projet est entièrement conteneurisé pour faciliter son déploiement.
 3.  L'application sera accessible à l'adresse : **http://localhost:8080**
 
 ### Arrêt
-
-Pour arrêter les conteneurs :
 
 Pour arrêter les conteneurs :
 
