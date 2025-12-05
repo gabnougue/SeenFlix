@@ -63,7 +63,6 @@ CURRENT_KEY=$(grep "TMDB_API_KEY=" backend/.env | cut -d'=' -f2 | tr -d '"')
 if [ "$CURRENT_KEY" = "YOUR_TMDB_API_KEY" ] || [ -z "$CURRENT_KEY" ]; then
     echo ""
     echo "Vous avez besoin d'une clé API TMDB."
-    echo "Obtenez-la gratuitement sur: https://www.themoviedb.org/settings/api"
     echo ""
     read -p "Entrez votre clé TMDB API (ou appuyez sur Entrée pour ignorer): " TMDB_KEY
     
