@@ -15,7 +15,7 @@ const error = ref(null)
 const itemToRemove = ref(null)
 const filterType = ref("all")      // "all", "movie", "tv"
 const filterYear = ref("")          // année, ex: "2023"
-const filterRating = ref(0)         // note minimale 0-5
+const filterRating = ref("")         // note minimale 0-5
 
 
 // Synopsis étendus (Set des id)
@@ -133,7 +133,7 @@ const filteredFavorites = computed(() => {
 const resetFilters = () => {
   filterType.value = "all"
   filterYear.value = ""
-  filterRating.value = 0
+  filterRating.value = ""
 }
 
 onMounted(loadFavorites)
@@ -158,8 +158,8 @@ onMounted(loadFavorites)
           <option value="movie">Film</option>
           <option value="tv">Série</option>
         </select>
-        <input type="number" v-model="filterYear" placeholder="YYYY" min="1900" max="2100" />
-        <input type="number" v-model="filterRating" min="0" max="5" />
+        <input type="number" v-model="filterYear" placeholder="Année de sortie" min="1900" max="2100" />
+        <input type="number" v-model="filterRating" placeholder="Note sur 5" min="0" max="5" />
         <button @click="resetFilters">Réinitialiser</button>
       </div>
 
@@ -167,7 +167,7 @@ onMounted(loadFavorites)
       <div v-if="loading" class="loading-state">Chargement de vos favoris...</div>
       <div v-else-if="error" class="error">{{ error }}</div>
       <div v-else-if="filteredFavorites.length === 0" class="empty-state">
-        <div class="empty-icon">⭐</div>
+        <img src="/fav.png" alt="Favoris" class="fav-icon" />
         <p class="empty-message">Aucun favori correspondant</p>
         <p class="empty-hint">Ajoutez des films depuis la recherche pour les retrouver ici</p>
         <router-link to="/search" class="btn-primary">Découvrir des films</router-link>
@@ -325,10 +325,11 @@ onMounted(loadFavorites)
   padding: var(--spacing-xxl);
 }
 
-.empty-icon {
-  font-size: 4rem;
+.fav-icon {
   margin-bottom: var(--spacing-lg);
-  opacity: 0.5;
+  width: 120px;
+  height: auto;
+  animation: fadeIn 0.6s ease-out;
 }
 
 .empty-message {
