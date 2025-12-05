@@ -41,12 +41,12 @@ else
     # Remplacer les secrets dans le fichier .env
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
-        sed -i '' "s/CHANGE_ME_ACCESS_SECRET_RANDOM_STRING/$ACCESS_SECRET/" backend/.env
-        sed -i '' "s/CHANGE_ME_REFRESH_SECRET_RANDOM_STRING/$REFRESH_SECRET/" backend/.env
+        sed -i '' "s#CHANGE_ME_ACCESS_SECRET_RANDOM_STRING#$ACCESS_SECRET#" backend/.env
+        sed -i '' "s#CHANGE_ME_REFRESH_SECRET_RANDOM_STRING#$REFRESH_SECRET#" backend/.env
     else
         # Linux
-        sed -i "s/CHANGE_ME_ACCESS_SECRET_RANDOM_STRING/$ACCESS_SECRET/" backend/.env
-        sed -i "s/CHANGE_ME_REFRESH_SECRET_RANDOM_STRING/$REFRESH_SECRET/" backend/.env
+        sed -i "s#CHANGE_ME_ACCESS_SECRET_RANDOM_STRING#$ACCESS_SECRET#" backend/.env
+        sed -i "s#CHANGE_ME_REFRESH_SECRET_RANDOM_STRING#$REFRESH_SECRET#" backend/.env
     fi
     echo -e "${GREEN}✓${NC} Secrets JWT générés automatiquement"
 fi
@@ -68,9 +68,9 @@ if [ "$CURRENT_KEY" = "YOUR_TMDB_API_KEY" ] || [ -z "$CURRENT_KEY" ]; then
     
     if [ -n "$TMDB_KEY" ]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/YOUR_TMDB_API_KEY/$TMDB_KEY/" backend/.env
+            sed -i '' "s#YOUR_TMDB_API_KEY#$TMDB_KEY#" backend/.env
         else
-            sed -i "s/YOUR_TMDB_API_KEY/$TMDB_KEY/" backend/.env
+            sed -i "s#YOUR_TMDB_API_KEY#$TMDB_KEY#" backend/.env
         fi
         echo -e "${GREEN}✓${NC} Clé TMDB configurée"
     else
