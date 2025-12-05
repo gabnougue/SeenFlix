@@ -10,3 +10,4 @@ coverage
 # Prisma
 backend/prisma/dev.db
 backend/prisma/dev.db-journal
+RAPPORT_PROJET.md
