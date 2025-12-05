@@ -1,17 +1,32 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '../api/axios'
 import StarRating from '../components/StarRating.vue'
 import { useUserStore } from '../store/user'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 
 const movie = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const userFavorite = ref(null)
+
+// Notification système
+const notification = ref({
+  show: false,
+  message: "",
+  type: "success",
+})
+
+const showNotification = (message, type = "success") => {
+  notification.value = { show: true, message, type }
+  setTimeout(() => {
+    notification.value.show = false
+  }, 3000)
+}
 
 // Récupération des infos via notre backend
 const fetchMovie = async () => {
@@ -48,18 +63,23 @@ const checkUserFavorite = async () => {
 
 // Fonction pour ajouter aux favoris (raccourci depuis la page détail)
 const addToFavorites = async () => {
-  if (!userStore.isAuthenticated) return alert("Connectez-vous pour ajouter aux favoris")
+  if (!userStore.isAuthenticated) {
+    showNotification("Vous devez être connecté pour ajouter un favori", "warning")
+    return
+  }
   try {
     const { type, id } = route.params
     const res = await api.post("/me/favorites", { tmdbId: parseInt(id), type })
     // Mettre à jour l'état local au lieu de recharger
     userFavorite.value = res.data
+    showNotification("Ajouté à vos favoris", "success")
   } catch (err) {
     if (err.response?.status === 409) {
       // Déjà dans les favoris, vérifier l'état
       await checkUserFavorite()
+      showNotification("Ce film est déjà dans vos favoris", "warning")
     } else {
-      alert("Erreur lors de l'ajout")
+      showNotification("Erreur lors de l'ajout", "error")
     }
   }
 }
@@ -71,8 +91,9 @@ const removeFromFavorites = async () => {
     await api.delete(`/me/favorites/${userFavorite.value.id}`)
     // Mettre à jour l'état local directement
     userFavorite.value = null
+    showNotification("Retiré des favoris", "success")
   } catch (err) {
-    alert("Erreur lors de la suppression")
+    showNotification("Erreur lors de la suppression", "error")
   }
 }
 
@@ -81,13 +102,23 @@ onMounted(fetchMovie)
 
 <template>
   <div class="detail-page">
+    <!-- Notification système -->
+    <Transition name="slide-fade">
+      <div v-if="notification.show" class="notification" :class="`notification-${notification.type}`">
+        {{ notification.message }}
+      </div>
+    </Transition>
+
     <div v-if="loading" class="loading">Chargement...</div>
     <div v-else-if="error" class="error-msg">{{ error }}</div>
 
     <div v-else-if="movie" class="movie-container">
-      
+
       <div class="hero" :style="movie.backdropPath ? { backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdropPath})` } : {}">
         <div class="hero-overlay">
+          <!-- Bouton retour -->
+          <button @click="router.back()" class="btn-back">← Retour</button>
+
           <div class="hero-content">
             <img 
               v-if="movie.posterPath"
@@ -110,8 +141,11 @@ onMounted(fetchMovie)
                 </div>
                 <div class="rating-box seenflix">
                   <span class="label">Note SeenFlix</span>
-                  <StarRating :modelValue="movie.seenFlixRating" :max="5" :showValue="true" />
-                  <span class="count">({{ movie.reviews.length }} avis)</span>
+                  <div v-if="movie.reviews.length > 0">
+                    <StarRating :modelValue="movie.seenFlixRating" :max="5" :showValue="true" />
+                    <span class="count">({{ movie.reviews.length }} avis)</span>
+                  </div>
+                  <span v-else class="no-reviews-text">(pas d'avis)</span>
                 </div>
               </div>
 
@@ -176,6 +210,69 @@ onMounted(fetchMovie)
 .detail-page {
   min-height: calc(100vh - var(--navbar-height));
   background: var(--bg-primary);
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Notification système */
+.notification {
+  position: fixed;
+  top: calc(var(--navbar-height) + var(--spacing-md));
+  right: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  font-weight: 500;
+  max-width: 400px;
+}
+
+.notification-success {
+  background: var(--color-success);
+  color: var(--color-white);
+}
+
+.notification-error {
+  background: var(--color-error);
+  color: var(--color-white);
+}
+
+.notification-warning {
+  background: #ff9800;
+  color: var(--color-white);
+}
+
+.slide-fade-enter-active {
+  animation: slideIn var(--transition-base) ease-out;
+}
+
+.slide-fade-leave-active {
+  animation: slideIn var(--transition-base) ease-out reverse;
+}
+
+/* Bouton retour */
+.btn-back {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  margin-bottom: var(--spacing-lg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-back:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-4px);
+}
+
+.no-reviews-text {
+  font-size: var(--font-size-sm);
+  opacity: 0.6;
+  font-style: italic;
 }
 
 /* HERO */
@@ -184,10 +281,12 @@ onMounted(fetchMovie)
   background-position: center;
   position: relative;
   color: white;
+  margin-top: 0;
 }
 .hero-overlay {
   background: linear-gradient(to bottom, rgba(44, 44, 44, 0.8), var(--bg-primary));
-  padding: var(--spacing-xxl) var(--spacing-lg);
+  padding: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
 }
 .hero-content {
   max-width: var(--container-max-width);

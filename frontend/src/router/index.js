@@ -21,10 +21,10 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to) => {
   const userStore = useUserStore()
 
-  // On tente de restaurer la session si ce n’est pas déjà fait
+  // On tente de restaurer la session si ce n'est pas déjà fait
   if (!userStore.user && !userStore.accessToken) {
     await userStore.restoreSession()
   }

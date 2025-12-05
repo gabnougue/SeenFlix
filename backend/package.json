@@ -11,7 +11,8 @@
     "start": "node src/index.js",
     "db:seed": "node prisma/seed.js",
     "db:reset": "npx prisma migrate reset --force",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --verbose"
   },
   "keywords": [],
   "author": "",
@@ -32,7 +33,10 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.11",
-    "prisma": "^6.19.0"
+    "prisma": "^6.19.0",
+    "supertest": "^7.1.4"
   }
 }
