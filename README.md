@@ -33,9 +33,46 @@ Le projet est entièrement conteneurisé pour faciliter son déploiement.
 
 3.  L'application sera accessible à l'adresse : **http://localhost:8080**
 
+### Développement
+
+#### Option A : Développement avec Docker (Recommandé)
+
+Pour lancer l'application en mode développement (avec **Hot Reload**), utilisez l'argument `dev` :
+
+```bash
+./deploy.sh dev
+```
+
+- Les modifications dans le code (`backend` ou `frontend`) sont immédiatement prises en compte.
+- Les logs s'affichent en direct dans le terminal.
+- Appuyez sur `Ctrl+C` pour arrêter.
+- L'application sera accessible sur **http://localhost:8081**
+
+#### Option B : Développement Local (Sans Docker)
+
+Si vous préférez utiliser vos outils locaux (Node.js requis) :
+
+1.  **Backend** :
+
+    ```bash
+    cd backend
+    npm install
+    npm run dev
+    ```
+
+    (Le serveur tourne sur `http://localhost:3000`)
+
+2.  **Frontend** (dans un autre terminal) :
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+    (L'application sera accessible sur `http://localhost:5173`)
+
 ### Arrêt
 
-Pour arrêter les conteneurs :
+Pour arrêter les conteneurs (mode production) :
 
 ```bash
 docker-compose down
