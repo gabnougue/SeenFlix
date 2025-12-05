@@ -3,21 +3,26 @@
 ## 🚀 Lancer les tests
 
 ### Tous les tests
+
 ```bash
 npm test
 ```
 
 ### Un seul fichier
+
 ```bash
 npm test auth.service.test.js
 ```
 
 ### Un dossier spécifique
+
 ```bash
 npm test tests/services
 ```
 
-## 📁 Fichiers de tests
+## Fichiers de tests
+
+L'architecture des tests suit celle du code source :
 
 ```
 tests/
@@ -28,7 +33,9 @@ tests/
     └── authenticateToken.test.js    # Tests JWT
 ```
 
-## ✅ Résultat attendu
+## Résultat attendu
+
+Si tout fonctionne correctement, vous devriez voir :
 
 ```bash
 $ npm test
