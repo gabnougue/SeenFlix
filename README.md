@@ -4,7 +4,7 @@ Application web de recherche de films et séries, intégrant une gestion de favo
 
 ## Participants
 
-Projet réalisé dans le cadre de la 4ème année filière Réseaux et Informatique à l'ENSEIRB-MATMECA.
+Projet réalisé dans le cadre de la 2ème année filière Réseaux et Informatique à l'ENSEIRB-MATMECA.
 
 - **Benjamin Manem** : Base de Données & Favoris
 - **Roxane Fuatoga** : Authentification & Sécurité
@@ -82,6 +82,15 @@ Pour arrêter et **tout nettoyer** (supprimer les volumes de base de données, e
 
 ```bash
 ./deploy.sh clean
+```
+
+---
+## For testing frontend
+
+### Lint with [ESLint](https://eslint.org/)
+
+```sh
+npm run lint
 ```
 
 ---
