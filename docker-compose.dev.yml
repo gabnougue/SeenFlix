@@ -18,7 +18,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=file:./prisma/dev.db
     restart: unless-stopped
 
   frontend:
