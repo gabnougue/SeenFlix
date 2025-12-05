@@ -1,6 +1,10 @@
 import express from "express";
 import { registerSchema, loginSchema } from "../validation/auth.schema.js";
 import { registerUser, loginUser } from "../services/auth.service.js";
+import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const router = express.Router();
 
@@ -176,3 +180,97 @@ router.post("/login", async (req, res) => {
 });
 
 export default router;
+
+/**
+ * @openapi
+ * /auth/refresh:
+ *   post:
+ *     summary: Rafraîchir un token d'accès
+ *     description: Permet d'obtenir un nouveau accessToken en utilisant un refreshToken valide.
+ *     tags:
+ *       - Authentification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh token valide
+ *     responses:
+ *       200:
+ *         description: Nouveau accessToken généré
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *       401:
+ *         description: Refresh token invalide ou expiré
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erreur serveur interne
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post("/refresh", async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(401).json({ error: "Refresh token missing" });
+  }
+
+  try {
+    // Vérifier le refresh token
+    const payload = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
+
+    // Payload contient { id: <userId> }
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id }
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    // Générer un nouveau access token
+    const newAccessToken = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_ACCESS_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_TTL }
+    );
+
+    // nouveau refresh token
+    const newRefreshToken = jwt.sign(
+      { id: user.id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: process.env.JWT_REFRESH_TTL }
+    );
+
+    return res.json({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+
+  } catch (err) {
+    console.error("REFRESH ERROR:", err);
+    return res.status(401).json({ error: "Invalid or expired refresh token" });
+  }
+});
+
