@@ -2,7 +2,7 @@ import axios from "axios"
 import { useUserStore } from "../store/user"
 
 const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: import.meta.env.VITE_API_URL || "/api", // Utilise le proxy Nginx par défaut (/api -> backend:3000)
 })
 
 // ajoute automatiquement Authorization: Bearer token
