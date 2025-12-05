@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log(' Seeding database...');
 
-  // Créer un utilisateur de démo -- Possible de le remplacer pour créer un admin init
+  // Créer un utilisateur de démo
   const passwordHash = await bcrypt.hash('Passw0rd!', 10);
   
   const alice = await prisma.user.upsert({
