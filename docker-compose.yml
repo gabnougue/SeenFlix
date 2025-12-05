@@ -6,7 +6,7 @@ services:
       - .env
     environment:
       - PORT=3000
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=file:./prisma/dev.db
       # Les autres variables (JWT, TMDB_API_KEY) seront chargées depuis le fichier .env
     volumes:
       # Persistance de la base de données SQLite

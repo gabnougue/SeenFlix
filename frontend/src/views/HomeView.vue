@@ -9,15 +9,13 @@
       </p>
 
       <div class="home-actions">
-        <router-link class="btn-primary btn-hero" to="/search">
-          Rechercher des films
-        </router-link>
+        <router-link class="btn-primary btn-hero" to="/search"> Rechercher des films </router-link>
       </div>
     </div>
 
     <div class="home-features">
       <router-link to="/search">
-        <div class="feature-card" >
+        <div class="feature-card">
           <img src="/search.png" alt="Recherche" class="feature-icon-img" />
           <h3>Recherche TMDB</h3>
           <p>Accédez à la plus grande base de données de films et séries</p>
